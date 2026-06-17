@@ -25,6 +25,12 @@ _AIRPORTS: dict[str, tuple[str, str]] = {
     "MIA": ("US", "NA"), "ATL": ("US", "NA"), "BOS": ("US", "NA"),
     "IAD": ("US", "NA"), "DFW": ("US", "NA"), "SEA": ("US", "NA"),
     "DEN": ("US", "NA"), "IAH": ("US", "NA"),
+    "LAS": ("US", "NA"), "PHX": ("US", "NA"), "MCO": ("US", "NA"),
+    "CLT": ("US", "NA"), "MSP": ("US", "NA"), "DTW": ("US", "NA"),
+    "PHL": ("US", "NA"), "BWI": ("US", "NA"), "SLC": ("US", "NA"),
+    "SAN": ("US", "NA"), "TPA": ("US", "NA"), "HNL": ("US", "NA"),
+    "FLL": ("US", "NA"), "DCA": ("US", "NA"), "MDW": ("US", "NA"),
+    "PDX": ("US", "NA"), "STL": ("US", "NA"), "AUS": ("US", "NA"),
     # ── North America (Canada / Mexico) ─────────────────────────────────
     "YYZ": ("CA", "NA"), "YVR": ("CA", "NA"), "YUL": ("CA", "NA"),
     "MEX": ("MX", "NA"), "CUN": ("MX", "NA"),

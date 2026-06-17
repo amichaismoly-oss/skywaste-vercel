@@ -175,8 +175,9 @@ function init() {
   // Render initial calculations
   calculateAndRender();
 
-  // Fire the real backend engine for the initial flight.
+  // Fire the real backend engine for the initial flight + load BTS routes.
   runLiveEngine();
+  loadBtsRoutes();
 }
 
 // Live Clock Update
@@ -717,22 +718,19 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Run the engine for the currently selected DEMO flight.
 async function runLiveEngine() {
   const flight = currentState.activeFlight;
   const params = ENGINE_PARAMS[flight.id];
-  const resultsEl = document.getElementById("engine-results");
-  const placeholderEl = document.getElementById("engine-placeholder");
-  const errorEl = document.getElementById("engine-error");
-
   if (!params) {
     showEngineError(`No engine parameters mapped for flight ${flight.id}.`);
     return;
   }
+  // Reset the BTS selector — we're back on a demo flight.
+  const sel = document.getElementById("bts-route-select");
+  if (sel && !sel.disabled) sel.value = "";
 
-  setEngineStatus("loading", "Computing…");
-  if (errorEl) errorEl.classList.add("hidden");
-
-  const payload = {
+  await runEngineWithPayload({
     flight_number: flight.flightNo,
     origin_airport: params.origin,
     destination_airport: params.dest,
@@ -740,7 +738,17 @@ async function runLiveEngine() {
     aircraft_type: params.aircraftType,
     passenger_count: flight.passengers,
     route_distance_km: params.routeDistanceKm,
-  };
+  });
+}
+
+// Shared fetch + render path for any flight payload (demo or BTS route).
+async function runEngineWithPayload(payload) {
+  const resultsEl = document.getElementById("engine-results");
+  const placeholderEl = document.getElementById("engine-placeholder");
+  const errorEl = document.getElementById("engine-error");
+
+  setEngineStatus("loading", "Computing…");
+  if (errorEl) errorEl.classList.add("hidden");
 
   try {
     const resp = await fetch(`${API_BASE}/api/optimize/flight`, {
@@ -760,6 +768,64 @@ async function runLiveEngine() {
   } catch (err) {
     showEngineError(err.message || String(err));
   }
+}
+
+// Load real routes ingested from BTS T-100 and populate the selector.
+async function loadBtsRoutes() {
+  const sel = document.getElementById("bts-route-select");
+  const hint = document.getElementById("bts-hint");
+  if (!sel) return;
+  try {
+    const resp = await fetch(`${API_BASE}/api/bts/routes`);
+    const data = await resp.json();
+    const routes = data.routes || [];
+    window.__btsRoutes = routes;
+
+    if (!data.ingested || routes.length === 0) {
+      sel.innerHTML = "<option value=''>— No BTS data ingested —</option>";
+      sel.disabled = true;
+      if (hint) hint.innerText = "Run scripts/ingest_bts_t100.py with a TranStats CSV to enable.";
+      return;
+    }
+
+    sel.disabled = false;
+    sel.innerHTML =
+      "<option value=''>— Select a real BTS route —</option>" +
+      routes
+        .map(
+          (r, i) =>
+            `<option value="${i}">${r.origin}→${r.dest} · ${r.avg_pax} pax · ${r.aircraft}</option>`
+        )
+        .join("");
+    if (hint) {
+      const yr = routes[0].year ? ` (${routes[0].year})` : "";
+      hint.innerText = `${routes.length} routes from BTS T-100${yr}`;
+    }
+
+    sel.addEventListener("change", () => {
+      const idx = sel.value;
+      if (idx === "") return;
+      runBtsRoute(window.__btsRoutes[Number(idx)]);
+    });
+  } catch (err) {
+    sel.innerHTML = "<option value=''>— BTS routes unavailable —</option>";
+    sel.disabled = true;
+    if (hint) hint.innerText = "";
+  }
+}
+
+// Run the engine for a real BTS route.
+async function runBtsRoute(route) {
+  if (!route) return;
+  await runEngineWithPayload({
+    flight_number: (route.carrier || "") + route.origin + route.dest,
+    origin_airport: route.origin,
+    destination_airport: route.dest,
+    departure_date: todayISO(),
+    aircraft_type: route.aircraft || `Type ${route.aircraft_code || "?"}`,
+    passenger_count: route.avg_pax,
+    route_distance_km: route.distance_km > 0 ? route.distance_km : 1000,
+  });
 }
 
 function showEngineError(msg) {

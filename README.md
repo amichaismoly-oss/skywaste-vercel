@@ -89,3 +89,44 @@ Vercel functions:
 
 The buffer/savings calculations (`engine.py`, `models.py`) are **unchanged** from the
 full project, so results match the original API exactly.
+
+---
+
+## BTS real flight data (T-100)
+
+The dashboard's **Real BTS route** selector pulls genuine route statistics from the
+BTS **T-100 Segment** dataset (avg passengers/flight, distance, dominant aircraft) and
+feeds them into the optimization engine.
+
+BTS publishes **no live API** for granular T-100 data — it's a one-time CSV download
+from TranStats. The ingest is therefore offline + bundled:
+
+1. **Download the CSV** from TranStats T-100 Segment (free, no account):
+   <https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=GED> →
+   table **T-100 Segment (All Carriers)** → pick a year/month → select columns
+   `PASSENGERS, DEPARTURES_PERFORMED, DISTANCE, ORIGIN, DEST, AIRCRAFT_TYPE,
+   UNIQUE_CARRIER, YEAR, MONTH` → **Download** → unzip.
+2. **Ingest** it into the bundled JSON the API serves:
+   ```bash
+   python scripts/ingest_bts_t100.py path/to/T_T100_SEGMENT.csv --top 40
+   ```
+   This writes `skywaste/optimization/data/bts_routes.json` (served at
+   `GET /api/bts/routes`).
+3. **Redeploy** (`npx vercel --prod`, or just `git push` once auto-deploy is on).
+
+Until a CSV is ingested the selector shows "No BTS data ingested" — the app never
+ships fabricated route data.
+
+---
+
+## Auto-deploy (GitHub → Vercel)
+
+To make every `git push` redeploy automatically:
+
+```bash
+gh auth login                                   # one-time GitHub auth
+gh repo create skywaste-ai --public --source=. --push
+npx vercel git connect                          # link the Vercel project to the repo
+```
+
+After this, pushing to `main` triggers a production deploy with no manual step.

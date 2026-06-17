@@ -15,6 +15,7 @@ frontend in /public — no CORS, mobile-friendly.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from datetime import date
@@ -112,6 +113,26 @@ async def list_airports():
         "ORD": {"country": "US", "disposal_cost_usd_per_ton": 500.0, "abp_regime": "USDA APHIS Cat1"},
     }
     return {"airports": airports, "count": len(airports)}
+
+
+@app.get("/api/bts/routes", tags=["Reference"])
+async def bts_routes():
+    """
+    Real route stats ingested from the BTS T-100 Segment dataset (TranStats).
+
+    Returns avg passengers/flight, distance, and dominant aircraft per route, ready
+    to feed POST /api/optimize/flight. Until a CSV is ingested (see
+    scripts/ingest_bts_t100.py) this returns an empty list with ingested=false.
+    """
+    path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "skywaste", "optimization", "data", "bts_routes.json",
+    )
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {"source": "BTS T-100 Segment", "ingested": False, "route_count": 0, "routes": []}
 
 
 @app.post("/api/optimize/flight", response_model=OptimizationResult, tags=["Optimization"])

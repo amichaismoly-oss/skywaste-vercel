@@ -1,0 +1,7 @@
+{
+  "source": "BTS T-100 Segment (TranStats)",
+  "ingested": false,
+  "route_count": 0,
+  "note": "No BTS data ingested yet. Download the T-100 Segment CSV from TranStats and run: python scripts/ingest_bts_t100.py <csv>",
+  "routes": []
+}
