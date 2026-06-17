@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroWaste AI | Airline Catering & ICW Optimization Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+        </svg>
+        <span class="brand-text">AeroWaste <span class="accent-text">AI</span></span>
+      </div>
+      
+      <div class="sidebar-badge">
+        <span class="badge-dot pulse-green"></span>
+        <span class="badge-label">CO₂ Offset Tracker Active</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active">
+            <a href="#dashboard">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+              </svg>
+              Flight Payload Optimizer
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#simulator">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+              </svg>
+              What-If Simulation
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#payloads">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+              </svg>
+              Catering JSON Payloads
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status">
+          <div class="status-item">
+            <span class="status-key">AI Predictor</span>
+            <span class="status-val text-green">v2.4 (Active)</span>
+          </div>
+          <div class="status-item">
+            <span class="status-key">Catering API</span>
+            <span class="status-val text-green">Connected</span>
+          </div>
+          <div class="status-item">
+            <span class="status-key">Gate Feed</span>
+            <span class="status-val text-amber">Delayed (1.2s)</span>
+          </div>
+        </div>
+        <div class="user-profile">
+          <div class="avatar">LM</div>
+          <div class="user-info">
+            <span class="user-name">Sarah Jenkins</span>
+            <span class="user-role">Logistics Manager</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-bar">
+        <div class="flight-selector-container">
+          <label for="flight-select-input" class="selector-label">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="selector-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+            </svg>
+            Select Flight:
+          </label>
+          <div class="custom-select-wrapper">
+            <input type="text" id="flight-select-input" placeholder="Search & select flight..." readonly>
+            <div id="flight-dropdown" class="flight-dropdown-list hidden">
+              <!-- Dynamically populated via JS -->
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="dropdown-arrow">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="live-clock">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="clock-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="current-time">2026-05-25 21:32 UTC</span>
+          </div>
+          <span class="status-tag live">
+            <span class="pulse-green"></span> Live Monitor Mode
+          </span>
+        </div>
+      </header>
+
+      <!-- Connection Risk Alert Section -->
+      <section class="alert-section" id="alert-banner-container">
+        <!-- Rendered dynamically by JS -->
+      </section>
+
+      <!-- Dashboard Main Content Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Core Metrics Cards -->
+        <section class="metrics-grid">
+          
+          <!-- Confirmed Meals -->
+          <div class="metric-card">
+            <div class="card-header">
+              <span class="card-title">Confirmed Meals</span>
+              <div class="card-icon blue-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metric-confirmed-meals">0</div>
+            <div class="metric-subtext">Based on 24h passenger pre-orders</div>
+            <div class="metric-progress-container">
+              <div class="metric-progress-bar" id="metric-confirmed-pct" style="width: 60%;"></div>
+            </div>
+            <div class="metric-footer-text">
+              <span class="text-blue" id="metric-confirmed-rate">60%</span> order compliance rate
+            </div>
+          </div>
+
+          <!-- Predicted Meals Needed -->
+          <div class="metric-card">
+            <div class="card-header">
+              <span class="card-title">Predicted Meals Needed</span>
+              <div class="card-icon cyan-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21m0 0l-.813-5.096L3 15.094l5.096-.813L9 9.187l.813 5.094 5.096.813-5.096.81zM19.063 8.375L18.5 12m0 0l-.563-3.625L14.5 8l3.438-.563L18.5 4l.563 3.438L22.5 8l-3.438.563z" />
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metric-predicted-meals">0</div>
+            <div class="metric-subtext">AI lookalike model forecast</div>
+            <div class="metric-progress-container">
+              <div class="metric-progress-bar" id="metric-predicted-pct" style="width: 38%;"></div>
+            </div>
+            <div class="metric-footer-text">
+              Confidence level: <span class="text-cyan">94.8%</span>
+            </div>
+          </div>
+
+          <!-- Recommended Buffer Ratio -->
+          <div class="metric-card">
+            <div class="card-header">
+              <span class="card-title">Recommended Buffer</span>
+              <div class="card-icon amber-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metric-buffer-ratio">0.0%</div>
+            <div class="metric-subtext">Dynamic safety payload buffer</div>
+            <div class="metric-progress-container">
+              <div class="metric-progress-bar bg-amber" id="metric-buffer-pct" style="width: 40%;"></div>
+            </div>
+            <div class="metric-footer-text">
+              <span class="text-amber" id="metric-buffer-count">0 meals</span> buffer overhead
+            </div>
+          </div>
+
+          <!-- Estimated ICW Cost Savings -->
+          <div class="metric-card success-card">
+            <div class="card-header">
+              <span class="card-title">Estimated ICW Savings</span>
+              <div class="card-icon green-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.536-.22-2.121-.659-1.171-.879-1.171-2.303 0-3.182.449-.337 1.011-.526 1.6-.575m-1.7 9.999L12 18m0 0h.01m0 0l.08-.01M12 18c-.288 0-.583-.02-.872-.058m1.745-.042A24.1 24.1 0 0012 3m0 0h.01M12 3a24.103 24.103 0 00-1.745.058" />
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value text-green" id="metric-savings">$0.00</div>
+            <div class="metric-subtext">Financial savings vs standard plan</div>
+            <div class="metric-progress-container">
+              <div class="metric-progress-bar bg-green" style="width: 100%;"></div>
+            </div>
+            <div class="metric-footer-text">
+              Reduced fuel burn & disposal fees
+            </div>
+          </div>
+        </section>
+
+        <!-- Live ICW Optimization Engine (real FastAPI backend) -->
+        <section class="live-engine-card" id="live-engine-card">
+          <div class="live-engine-header">
+            <div class="widget-header live-engine-title">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="widget-title-icon text-cyan">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+              </svg>
+              <div>
+                <h3 class="widget-title">Live ICW Optimization Engine</h3>
+                <p class="widget-subtitle">Real buffer &amp; savings computed by the SkyWaste backend (FastAPI · serverless)</p>
+              </div>
+            </div>
+            <div class="live-engine-controls">
+              <span class="engine-status" id="engine-status"><span class="badge-dot"></span> Idle</span>
+              <button class="btn btn-primary" id="btn-run-engine">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="btn-icon">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+                Run Live Engine
+              </button>
+            </div>
+          </div>
+
+          <div class="live-engine-body">
+            <div class="engine-placeholder" id="engine-placeholder">
+              Select a flight above, then run the engine to compute the real ICW buffer recommendation,
+              savings breakdown, and regulatory risk straight from the backend.
+            </div>
+
+            <div class="engine-results hidden" id="engine-results">
+              <div class="engine-stat-grid">
+                <div class="engine-stat">
+                  <span class="es-label">Current Buffer (10%)</span>
+                  <span class="es-value" id="eng-current-buffer">—</span>
+                  <span class="es-unit">kg ICW</span>
+                </div>
+                <div class="engine-stat highlight">
+                  <span class="es-label">Optimized Buffer</span>
+                  <span class="es-value text-cyan" id="eng-optimized-buffer">—</span>
+                  <span class="es-unit">kg ICW</span>
+                </div>
+                <div class="engine-stat">
+                  <span class="es-label">Buffer Reduction</span>
+                  <span class="es-value text-green" id="eng-reduction">—</span>
+                  <span class="es-unit" id="eng-reduction-pct">—</span>
+                </div>
+                <div class="engine-stat highlight">
+                  <span class="es-label">Airline Net Saving</span>
+                  <span class="es-value text-green" id="eng-net-saving">—</span>
+                  <span class="es-unit">per flight</span>
+                </div>
+              </div>
+
+              <div class="engine-breakdown">
+                <div class="eb-col">
+                  <h4 class="section-divider-title">Savings Breakdown</h4>
+                  <div class="eb-row"><span>Disposal fees</span><span id="eng-disposal">—</span></div>
+                  <div class="eb-row"><span>Fuel burn</span><span id="eng-fuel">—</span></div>
+                  <div class="eb-row"><span>CORSIA carbon</span><span id="eng-corsia">—</span></div>
+                  <div class="eb-row total"><span>Total savings</span><span id="eng-total">—</span></div>
+                  <div class="eb-row"><span>Platform share (27.5%)</span><span id="eng-revshare">—</span></div>
+                </div>
+                <div class="eb-col">
+                  <h4 class="section-divider-title">Regulatory &amp; ESG</h4>
+                  <div class="eb-row"><span>Destination country</span><span id="eng-country">—</span></div>
+                  <div class="eb-row"><span>ICW category</span><span id="eng-category">—</span></div>
+                  <div class="eb-row"><span>ABP regime</span><span id="eng-regime">—</span></div>
+                  <div class="eb-row"><span>Regulatory risk</span><span id="eng-risk">—</span></div>
+                  <div class="eb-row"><span>CO₂ saved</span><span id="eng-co2">—</span></div>
+                </div>
+              </div>
+
+              <div class="engine-meta">
+                <span class="engine-confidence" id="eng-confidence">—</span>
+                <span class="engine-sources" id="eng-sources"></span>
+              </div>
+            </div>
+
+            <div class="engine-error hidden" id="engine-error"></div>
+          </div>
+        </section>
+
+        <!-- Dynamic Simulator widget & Logistics/Catering Payloads -->
+        <div class="details-section">
+          
+          <!-- Column 1: Core Simulator Widget -->
+          <div class="widget-card simulator-widget">
+            <div class="widget-header">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="widget-title-icon text-cyan">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.827m11.379-8.16l1.15-.827M8.14 21.27l.707-1.03m7.56-10.98l.707-1.03M12 3v1.5m0 15V21m-4.5-1.5v-1.5m9 3v-1.5" />
+              </svg>
+              <div>
+                <h3 class="widget-title">Interactive Core Optimizer</h3>
+                <p class="widget-subtitle">Simulate catering payloads and waste dynamics</p>
+              </div>
+            </div>
+
+            <div class="simulator-sliders">
+              <!-- Slider 1 -->
+              <div class="slider-group">
+                <div class="slider-label-row">
+                  <label for="slider-icw-fee" class="slider-title">Destination ICW Disposal Fee</label>
+                  <span class="slider-val" id="val-icw-fee">$800 <span class="unit">/ Ton</span></span>
+                </div>
+                <input type="range" id="slider-icw-fee" min="100" max="2000" step="50" value="800" class="input-slider">
+                <div class="slider-min-max">
+                  <span>$100</span>
+                  <span>$2,000 / Ton</span>
+                </div>
+              </div>
+
+              <!-- Slider 2 -->
+              <div class="slider-group">
+                <div class="slider-label-row">
+                  <label for="slider-duration" class="slider-title">Flight Duration</label>
+                  <span class="slider-val" id="val-duration">11 <span class="unit">Hours</span></span>
+                </div>
+                <input type="range" id="slider-duration" min="1" max="16" step="0.5" value="11" class="input-slider">
+                <div class="slider-min-max">
+                  <span>1 Hour</span>
+                  <span>16 Hours</span>
+                </div>
+              </div>
+
+              <!-- Slider 3 -->
+              <div class="slider-group">
+                <div class="slider-label-row">
+                  <label for="slider-preorder-rate" class="slider-title">Passenger Pre-order Rate</label>
+                  <span class="slider-val" id="val-preorder-rate">60%</span>
+                </div>
+                <input type="range" id="slider-preorder-rate" min="0" max="100" step="5" value="60" class="input-slider">
+                <div class="slider-min-max">
+                  <span>0%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mathematical Output Formulas Panel -->
+            <div class="simulation-outputs">
+              <h4 class="section-divider-title">Simulation Outputs</h4>
+              
+              <div class="outputs-grid">
+                <div class="output-item">
+                  <span class="output-label">Total Waste Cost</span>
+                  <div class="output-value-container">
+                    <span class="output-value text-red" id="calc-waste-cost">$0</span>
+                  </div>
+                  <span class="output-formula">Disposal Fee × Leftover Tons</span>
+                </div>
+
+                <div class="output-item">
+                  <span class="output-label">Fuel Weight Penalty</span>
+                  <div class="output-value-container">
+                    <span class="output-value text-amber" id="calc-fuel-penalty">$0</span>
+                  </div>
+                  <span class="output-formula">Duration × Leftover Tons × $120</span>
+                </div>
+              </div>
+
+              <div class="waste-metrics-subrow">
+                <div>
+                  <span class="tiny-label">Predicted Leftovers</span>
+                  <span class="tiny-val" id="calc-leftover-meals">0 meals</span>
+                </div>
+                <div>
+                  <span class="tiny-label">Leftover Weight</span>
+                  <span class="tiny-val" id="calc-leftover-tons">0.000 Tons</span>
+                </div>
+                <div>
+                  <span class="tiny-label">Catering Target Accuracy</span>
+                  <span class="tiny-val text-green" id="calc-catering-accuracy">98.2%</span>
+                </div>
+              </div>
+
+              <!-- Dynamic Optimized Recommendation Banner -->
+              <div class="optimized-recommendation-card" id="recommendation-card">
+                <div class="recommendation-badge-row">
+                  <div class="recommendation-badge" id="recommendation-badge">OPTIMIZED</div>
+                  <div class="recommendation-impact" id="recommendation-impact">Buffer: 2.0%</div>
+                </div>
+                <p class="recommendation-text" id="recommendation-text">
+                  Loading recommendation engine...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Logistics Tracker & JSON payload -->
+          <div class="right-column-container">
+            
+            <!-- Logistics Timeline Tracker -->
+            <div class="widget-card timeline-card">
+              <div class="widget-header">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="widget-title-icon text-amber">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 class="widget-title">Active Flight Logistics Timeline</h3>
+                  <p class="widget-subtitle">Milestones for catering payload finalization</p>
+                </div>
+              </div>
+
+              <div class="timeline">
+                <!-- Step 1 -->
+                <div class="timeline-step" id="step-t48">
+                  <div class="timeline-marker">
+                    <span class="step-num">1</span>
+                    <span class="step-check">✓</span>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-time-badge">T-48 Hours</div>
+                    <h4 class="timeline-step-title">Initial Baseline Forecast</h4>
+                    <p class="timeline-step-desc">Historical data & initial schedules sent to caterer.</p>
+                    <div class="timeline-meta" id="timeline-t48-meta">Baseline Payload: 280 meals standard distribution.</div>
+                  </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="timeline-step" id="step-t24">
+                  <div class="timeline-marker">
+                    <span class="step-num">2</span>
+                    <span class="step-check">✓</span>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-time-badge lock-window">T-24 Hours (Lock Window)</div>
+                    <h4 class="timeline-step-title">Lookalike AI Modeling Payload</h4>
+                    <p class="timeline-step-desc">Pre-orders locked. Lookalike forecasting generated dynamic payload payload for non-selected seats.</p>
+                    <div class="timeline-meta" id="timeline-t24-meta">Lookalike model predicted 120 meals with 95% confidence.</div>
+                  </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="timeline-step" id="step-t5">
+                  <div class="timeline-marker">
+                    <span class="step-num">3</span>
+                    <span class="step-check">●</span>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-time-badge final-adjustment">T-5 Hours (Final Adjustment)</div>
+                    <h4 class="timeline-step-title">Connection Flight Scan</h4>
+                    <p class="timeline-step-desc">Scanning connection delays. Trimming loading payload based on delayed connections.</p>
+                    <div class="timeline-meta" id="timeline-t5-meta">Risk scan active. Ready to generate airport truck loading manifest.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- JSON Payloads Section -->
+            <div class="widget-card payload-card">
+              <div class="widget-header">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="widget-title-icon text-green">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <div>
+                  <h3 class="widget-title">Catering Service Dispatch</h3>
+                  <p class="widget-subtitle">Generate cargo payload instructions</p>
+                </div>
+              </div>
+
+              <div class="payload-actions">
+                <button class="btn btn-primary" id="btn-generate-json">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="btn-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  Generate & View JSON Payload
+                </button>
+              </div>
+
+              <!-- JSON Viewer Block -->
+              <div class="json-viewer-container hidden" id="json-viewer-container">
+                <div class="json-header">
+                  <span class="json-file-name">catering_payload_export.json</span>
+                  <button class="btn-copy" id="btn-copy-json" title="Copy JSON payload">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="copy-icon">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.309V19.5L12 14.25l5.25 5.25V7.309" />
+                    </svg>
+                    <span>Copy</span>
+                  </button>
+                </div>
+                <pre class="json-code"><code id="json-code-block">{}</code></pre>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
