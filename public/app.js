@@ -171,6 +171,7 @@ function init() {
   setFlightState(flightsData[0]);
   setupEventListeners();
   setupEngineControls();
+  setupSidebarNav();
 
   // Render initial calculations
   calculateAndRender();
@@ -700,6 +701,47 @@ const fmtUSD = (n) =>
   "$" + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtKg = (n) =>
   Number(n).toLocaleString(undefined, { maximumFractionDigits: 1 });
+
+// Scroll a nested overflow container to `top`. Uses native smooth scrolling in
+// real browsers, with a hard fallback that guarantees it lands even where smooth
+// scrollTo is a no-op (e.g. some headless renderers).
+function smoothScrollContainer(el, top) {
+  const dest = Math.max(0, top);
+  try {
+    el.scrollTo({ top: dest, behavior: "smooth" });
+  } catch (e) {
+    el.scrollTop = dest;
+  }
+  setTimeout(() => {
+    if (Math.abs(el.scrollTop - dest) > 4) el.scrollTop = dest;
+  }, 500);
+}
+
+// Sidebar nav: scroll the .main-content container (the real scroll area — the
+// window itself doesn't scroll) to the target section and highlight the item.
+function setupSidebarNav() {
+  const scroller = document.querySelector(".main-content");
+  const items = document.querySelectorAll(".sidebar-nav .nav-item");
+  items.forEach((item) => {
+    const link = item.querySelector("a");
+    if (!link) return;
+    link.addEventListener("click", (e) => {
+      const id = (link.getAttribute("href") || "").replace("#", "");
+      const target = document.getElementById(id);
+      if (target && scroller) {
+        e.preventDefault();
+        const top =
+          target.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top +
+          scroller.scrollTop -
+          12;
+        smoothScrollContainer(scroller, top);
+        items.forEach((i) => i.classList.remove("active"));
+        item.classList.add("active");
+      }
+    });
+  });
+}
 
 function setupEngineControls() {
   const btn = document.getElementById("btn-run-engine");

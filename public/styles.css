@@ -1616,6 +1616,10 @@ body {
 }
 .measure-loop strong { color: var(--text-primary); }
 
+/* Sidebar nav anchor targets */
+html { scroll-behavior: smooth; }
+#dashboard, #simulator, #payloads { scroll-margin-top: 24px; }
+
 @media (max-width: 1180px) {
   .measure-form { grid-template-columns: 1fr 1fr; }
   .measure-submit { grid-column: 1 / -1; }
