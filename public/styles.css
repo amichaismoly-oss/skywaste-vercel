@@ -1550,6 +1550,81 @@ body {
   font-size: 0.72rem;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Post-flight consumption measurement card
+   ─────────────────────────────────────────────────────────────────────────── */
+.measure-card {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.05), var(--bg-card));
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.measure-title {
+  margin: 0 0 20px;
+  border: 0;
+  padding: 0;
+}
+.measure-form {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+.measure-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.measure-field label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.measure-field input,
+.measure-field select {
+  background: rgba(7, 11, 25, 0.9);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+.measure-field input:focus,
+.measure-field select:focus {
+  outline: none;
+  border-color: var(--color-green);
+}
+.measure-submit {
+  white-space: nowrap;
+  height: fit-content;
+}
+.measure-results {
+  margin-top: 22px;
+}
+.measure-loop {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.measure-loop strong { color: var(--text-primary); }
+
+@media (max-width: 1180px) {
+  .measure-form { grid-template-columns: 1fr 1fr; }
+  .measure-submit { grid-column: 1 / -1; }
+}
+@media (max-width: 580px) {
+  .measure-card { padding: 18px; }
+  .measure-form { grid-template-columns: 1fr; }
+}
+
 /* Engine card responsiveness */
 @media (max-width: 1180px) {
   .engine-stat-grid { grid-template-columns: repeat(2, 1fr); }

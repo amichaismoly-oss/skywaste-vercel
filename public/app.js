@@ -710,6 +710,107 @@ function setupEngineControls() {
 
   const dbtn = document.getElementById("btn-download-manifest");
   if (dbtn) dbtn.addEventListener("click", () => downloadManifest());
+
+  const sbtn = document.getElementById("btn-submit-measurement");
+  if (sbtn) sbtn.addEventListener("click", () => submitMeasurement());
+
+  const dmbtn = document.getElementById("btn-download-measured-manifest");
+  if (dmbtn) dmbtn.addEventListener("click", () => downloadMeasuredManifest());
+}
+
+// Returns the flight context for the currently selected flight/route.
+function currentFlightPayload() {
+  if (window.__lastPayload) return { ...window.__lastPayload };
+  const f = currentState.activeFlight;
+  const p = ENGINE_PARAMS[f.id] || {};
+  return {
+    flight_number: f.flightNo,
+    origin_airport: p.origin,
+    destination_airport: p.dest,
+    departure_date: todayISO(),
+    aircraft_type: p.aircraftType,
+    passenger_count: f.passengers,
+    route_distance_km: p.routeDistanceKm,
+  };
+}
+
+// Submit a post-flight weighing event → closes the loop.
+async function submitMeasurement() {
+  const uplift = parseFloat(document.getElementById("meas-uplift").value);
+  const returned = parseFloat(document.getElementById("meas-returned").value);
+  const pax = parseInt(document.getElementById("meas-pax").value, 10);
+  const method = document.getElementById("meas-method").value;
+  const operator = document.getElementById("meas-operator").value;
+  const resultsEl = document.getElementById("measure-results");
+
+  const flight = currentFlightPayload();
+  flight.passenger_count = pax;
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/measurement/flight`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        flight,
+        uplift_weight_kg: uplift,
+        returned_waste_weight_kg: returned,
+        measurement_method: method,
+        operator_id: operator,
+      }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    window.__measuredManifest = data.manifest;
+    renderMeasurement(data);
+    if (resultsEl) resultsEl.classList.remove("hidden");
+  } catch (err) {
+    const loop = document.getElementById("meas-loop");
+    if (loop) loop.innerText = "Measurement error: " + (err.message || err);
+  }
+}
+
+function renderMeasurement(data) {
+  const m = data.measurement;
+  const fb = m.model_feedback;
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = v;
+  };
+  set("meas-consumed", `${m.consumed_weight_kg} kg`);
+  set("meas-rate", `${m.consumption_rate_pct}% eaten`);
+  set("meas-perpax", `${m.actual_waste_kg_per_pax} kg`);
+
+  const deltaEl = document.getElementById("meas-delta");
+  const sign = fb.delta_kg_per_pax > 0 ? "+" : "";
+  deltaEl.innerText = `${sign}${fb.delta_kg_per_pax} kg`;
+  // Below prediction = less waste than assumed = good.
+  deltaEl.className = "es-value " + (fb.delta_kg_per_pax <= 0 ? "text-green" : "text-amber");
+  set("meas-dir", fb.direction.replace(/_/g, " "));
+
+  set("meas-disposal", `${m.returned_waste_weight_kg}`);
+
+  const loop = document.getElementById("meas-loop");
+  if (loop) {
+    loop.innerHTML =
+      `<strong>Loop closed:</strong> this measured <strong>${m.actual_waste_kg_per_pax} kg/pax</strong> ` +
+      `replaced the IATA 1.43 assumption — the engine re-optimized to ` +
+      `<strong>${data.optimization.waste_per_pax_kg} kg/pax</strong>, the manifest now carries ` +
+      `<strong>measured</strong> provenance, and the actual-vs-predicted delta is the model's training label.`;
+  }
+}
+
+function downloadMeasuredManifest() {
+  const m = window.__measuredManifest;
+  if (!m) return;
+  const blob = new Blob([JSON.stringify(m, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = m.manifest_id + "-measured.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Generate the ICW chain-of-custody compliance manifest for the last-run flight.
@@ -832,6 +933,9 @@ async function runEngineWithPayload(payload) {
     window.__lastPayload = payload;
     const mb = document.getElementById("btn-gen-manifest");
     if (mb) mb.disabled = false;
+    // Keep the measurement form's passenger count in sync with the active flight.
+    const paxField = document.getElementById("meas-pax");
+    if (paxField) paxField.value = payload.passenger_count;
   } catch (err) {
     showEngineError(err.message || String(err));
   }

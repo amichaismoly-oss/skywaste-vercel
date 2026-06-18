@@ -329,6 +329,82 @@
           </div>
         </section>
 
+        <!-- Post-Flight Consumption Measurement — closes the loop -->
+        <section class="measure-card" id="measure-card">
+          <div class="widget-header measure-title">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="widget-title-icon text-green">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
+            </svg>
+            <div>
+              <h3 class="widget-title">Post-Flight Consumption Measurement</h3>
+              <p class="widget-subtitle">Weigh returned trolleys → one event feeds the manifest, the optimizer, and the model</p>
+            </div>
+          </div>
+
+          <div class="measure-form">
+            <div class="measure-field">
+              <label for="meas-uplift">Uplift weight (kg)</label>
+              <input type="number" id="meas-uplift" value="480" min="0" step="0.1">
+            </div>
+            <div class="measure-field">
+              <label for="meas-returned">Returned waste (kg, measured)</label>
+              <input type="number" id="meas-returned" value="360" min="0" step="0.1">
+            </div>
+            <div class="measure-field">
+              <label for="meas-pax">Passengers</label>
+              <input type="number" id="meas-pax" value="280" min="1" step="1">
+            </div>
+            <div class="measure-field">
+              <label for="meas-method">Method</label>
+              <select id="meas-method">
+                <option value="trolley_scale">Trolley scale</option>
+                <option value="cart_differential">Cart differential</option>
+                <option value="manual">Manual entry</option>
+              </select>
+            </div>
+            <div class="measure-field">
+              <label for="meas-operator">Operator ID</label>
+              <input type="text" id="meas-operator" value="CREW-4471">
+            </div>
+            <button class="btn btn-primary measure-submit" id="btn-submit-measurement">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="btn-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Submit Measurement
+            </button>
+          </div>
+
+          <div class="measure-results hidden" id="measure-results">
+            <div class="engine-stat-grid">
+              <div class="engine-stat">
+                <span class="es-label">Consumed</span>
+                <span class="es-value" id="meas-consumed">—</span>
+                <span class="es-unit" id="meas-rate">—</span>
+              </div>
+              <div class="engine-stat highlight">
+                <span class="es-label">Actual waste / pax</span>
+                <span class="es-value text-cyan" id="meas-perpax">—</span>
+                <span class="es-unit">measured</span>
+              </div>
+              <div class="engine-stat">
+                <span class="es-label">vs IATA 1.43 kg</span>
+                <span class="es-value" id="meas-delta">—</span>
+                <span class="es-unit" id="meas-dir">—</span>
+              </div>
+              <div class="engine-stat highlight">
+                <span class="es-label">Disposal (measured)</span>
+                <span class="es-value text-green" id="meas-disposal">—</span>
+                <span class="es-unit">kg ICW</span>
+              </div>
+            </div>
+            <div class="measure-loop" id="meas-loop"></div>
+            <div class="manifest-actions">
+              <button class="btn btn-ghost" id="btn-download-measured-manifest">Download measured manifest</button>
+              <span class="manifest-verify ok">provenance: measured · custody: pending</span>
+            </div>
+          </div>
+        </section>
+
         <!-- Dynamic Simulator widget & Logistics/Catering Payloads -->
         <div class="details-section">
           

@@ -30,6 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from skywaste.compliance import build_manifest, verify_manifest
+from skywaste.measurement import process_measurement
 from skywaste.db import DBClient
 from skywaste.optimization import (
     FlightInput,
@@ -96,6 +97,16 @@ class ManifestRequest(BaseModel):
 
 class ManifestVerifyRequest(BaseModel):
     manifest: dict
+
+
+class MeasurementRequest(BaseModel):
+    flight: FlightRequest
+    uplift_weight_kg: float = Field(..., gt=0)
+    returned_waste_weight_kg: float = Field(..., ge=0)
+    measurement_method: str = "trolley_scale"
+    operator_id: Optional[str] = None
+    device_id: Optional[str] = None
+    previous_manifest_hash: Optional[str] = None
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
@@ -197,3 +208,44 @@ async def manifest_flight(req: ManifestRequest):
 async def manifest_verify(req: ManifestVerifyRequest):
     """Recompute the tamper-evident hash and report whether a manifest is intact."""
     return verify_manifest(req.manifest)
+
+
+@app.post("/api/measurement/flight", tags=["Measurement"])
+async def measurement_flight(req: MeasurementRequest):
+    """
+    Record a post-flight consumption measurement and close the loop.
+
+    Takes a real weighing event (uplift vs. returned waste), then:
+      1. derives the actual kg-of-waste/passenger (the model-training label),
+      2. re-optimizes the flight using that measured baseline
+         (FlightInput.historical_waste_kg_per_pax),
+      3. emits a `measured`-provenance disposal manifest.
+    """
+    try:
+        measurement = process_measurement(
+            uplift_weight_kg=req.uplift_weight_kg,
+            returned_waste_weight_kg=req.returned_waste_weight_kg,
+            passenger_count=req.flight.passenger_count,
+            method=req.measurement_method,
+            operator_id=req.operator_id,
+            device_id=req.device_id,
+        )
+
+        # Re-optimize with the measured baseline (closes the feedback loop).
+        flight_input = req.flight.to_input()
+        flight_input.historical_waste_kg_per_pax = measurement["actual_waste_kg_per_pax"]
+        result = await _engine.optimize_flight(flight_input)
+
+        manifest = build_manifest(
+            flight_input,
+            result,
+            previous_manifest_hash=req.previous_manifest_hash,
+            measurement=measurement,
+        )
+        return {
+            "measurement": measurement,
+            "optimization": result,
+            "manifest": manifest,
+        }
+    except Exception as e:  # pragma: no cover
+        raise HTTPException(status_code=500, detail=str(e))

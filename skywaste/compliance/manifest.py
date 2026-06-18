@@ -67,6 +67,7 @@ def build_manifest(
     previous_manifest_hash: Optional[str] = None,
     custody_chain: Optional[List[dict]] = None,
     generated_at: Optional[str] = None,
+    measurement: Optional[dict] = None,
 ) -> dict:
     """
     Build an ICW disposal manifest from a FlightInput + OptimizationResult.
@@ -80,6 +81,34 @@ def build_manifest(
     date_str = result.departure_date.isoformat()
     cat_num = _CATEGORY_NUM.get(result.icw_category, 1)
     fuel_saved_kg = round(result.co2_saved_kg / JET_FUEL_CO2_FACTOR, 2) if result.co2_saved_kg else 0.0
+
+    if measurement:
+        # Real weighing event: measured provenance replaces the model estimate.
+        quantity = {
+            "uplift_weight_kg": measurement["uplift_weight_kg"],
+            "returned_waste_weight_kg": measurement["returned_waste_weight_kg"],
+            "consumed_weight_kg": measurement["consumed_weight_kg"],
+            "disposal_weight_kg": measurement["returned_waste_weight_kg"],
+            "waste_per_pax_kg": measurement["actual_waste_kg_per_pax"],
+            "measurement_method": measurement.get("method", "trolley_scale"),
+            "measurement_confidence": "measured",
+            "measured_by": measurement.get("operator_id"),
+            "device_id": measurement.get("device_id"),
+            "captured_at_utc": measurement.get("captured_at_utc"),
+        }
+    else:
+        quantity = {
+            "uplift_weight_kg": result.current_buffer_kg,
+            "recommended_disposal_weight_kg": result.optimized_buffer_kg,
+            "buffer_reduction_kg": result.buffer_reduction_kg,
+            "waste_per_pax_kg": result.waste_per_pax_kg,
+            "measurement_method": "model_estimate",
+            "measurement_confidence": "modeled",
+            "_note": (
+                "Operational manifests must replace this with measured trolley-differential "
+                "weights (uplift vs. returned)."
+            ),
+        }
 
     manifest = {
         "manifest_id": f"ICW-{arr}-{date_str.replace('-', '')}-{flight.flight_number}-001",
@@ -110,18 +139,7 @@ def build_manifest(
             "regulatory_risk_level": result.regulatory_risk_level,
             "active_outbreaks": [_dump(o) for o in (result.active_outbreaks or [])],
         },
-        "quantity": {
-            "uplift_weight_kg": result.current_buffer_kg,
-            "recommended_disposal_weight_kg": result.optimized_buffer_kg,
-            "buffer_reduction_kg": result.buffer_reduction_kg,
-            "waste_per_pax_kg": result.waste_per_pax_kg,
-            "measurement_method": "model_estimate",
-            "measurement_confidence": "modeled",
-            "_note": (
-                "Operational manifests must replace this with measured trolley-differential "
-                "weights (uplift vs. returned)."
-            ),
-        },
+        "quantity": quantity,
         "custody_chain": custody_chain or [],
         "custody_chain_status": "provided" if custody_chain else "pending",
         "carbon_record": {
