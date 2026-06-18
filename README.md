@@ -1,5 +1,7 @@
 # SkyWaste AI ✈️♻️ — Web App (Vercel)
 
+**Live:** <https://skywaste-vercel.vercel.app> · auto-deployed from `main` via Vercel + GitHub.
+
 Mobile-friendly dashboard for **International Catering Waste (ICW) buffer optimization**.
 The polished AeroWaste dashboard front-end is wired to the **real SkyWaste optimization
 engine**, which runs as a Python serverless function on Vercel.
