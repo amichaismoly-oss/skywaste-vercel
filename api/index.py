@@ -29,6 +29,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from skywaste.compliance import build_manifest, verify_manifest
 from skywaste.db import DBClient
 from skywaste.optimization import (
     FlightInput,
@@ -85,6 +86,16 @@ class RouteRequest(BaseModel):
     origin_airport: str = Field(..., min_length=3, max_length=3)
     destination_airport: str = Field(..., min_length=3, max_length=3)
     flights: List[FlightRequest] = Field(..., min_length=1)
+
+
+class ManifestRequest(BaseModel):
+    flight: FlightRequest
+    previous_manifest_hash: Optional[str] = None
+    custody_chain: Optional[List[dict]] = None
+
+
+class ManifestVerifyRequest(BaseModel):
+    manifest: dict
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
@@ -155,3 +166,34 @@ async def optimize_route(req: RouteRequest) -> RouteOptimizationSummary:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/manifest/flight", tags=["Compliance"])
+async def manifest_flight(req: ManifestRequest):
+    """
+    Generate an ICW chain-of-custody disposal manifest for a flight.
+
+    Runs the optimization engine, then composes a structured ABP Category-1
+    disposal manifest (classification, quantity, custody chain, carbon record)
+    with a tamper-evident SHA-256 hash that chains to `previous_manifest_hash`.
+
+    NOTE: structural template — validate mandatory fields with a regulatory
+    advisor before operational use. Modeled/pending fields are flagged as such.
+    """
+    flight_input = req.flight.to_input()
+    try:
+        result = await _engine.optimize_flight(flight_input)
+        return build_manifest(
+            flight_input,
+            result,
+            previous_manifest_hash=req.previous_manifest_hash,
+            custody_chain=req.custody_chain,
+        )
+    except Exception as e:  # pragma: no cover
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/manifest/verify", tags=["Compliance"])
+async def manifest_verify(req: ManifestVerifyRequest):
+    """Recompute the tamper-evident hash and report whether a manifest is intact."""
+    return verify_manifest(req.manifest)

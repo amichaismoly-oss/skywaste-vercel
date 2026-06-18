@@ -704,6 +704,68 @@ const fmtKg = (n) =>
 function setupEngineControls() {
   const btn = document.getElementById("btn-run-engine");
   if (btn) btn.addEventListener("click", () => runLiveEngine());
+
+  const mbtn = document.getElementById("btn-gen-manifest");
+  if (mbtn) mbtn.addEventListener("click", () => generateManifest());
+
+  const dbtn = document.getElementById("btn-download-manifest");
+  if (dbtn) dbtn.addEventListener("click", () => downloadManifest());
+}
+
+// Generate the ICW chain-of-custody compliance manifest for the last-run flight.
+async function generateManifest() {
+  const payload = window.__lastPayload;
+  if (!payload) return;
+  const statusEl = document.getElementById("manifest-status");
+  const viewerEl = document.getElementById("manifest-viewer");
+  if (statusEl) statusEl.innerText = "Generating…";
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/manifest/flight`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flight: payload }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const manifest = await resp.json();
+    window.__lastManifest = manifest;
+
+    document.getElementById("manifest-json").innerText = JSON.stringify(manifest, null, 2);
+    document.getElementById("manifest-regime").innerText =
+      "ABP Cat " + manifest.waste_classification.abp_category + " · " + manifest.regulatory_regime;
+    document.getElementById("manifest-hash").innerText =
+      manifest.audit.tamper_evident_hash.slice(0, 23) + "…";
+
+    // Independently verify the tamper-evident hash via the backend.
+    const v = await fetch(`${API_BASE}/api/manifest/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ manifest }),
+    }).then((r) => r.json());
+    const vEl = document.getElementById("manifest-verify");
+    vEl.innerText = v.valid ? "✓ hash verified" : "✗ hash mismatch";
+    vEl.className = "manifest-verify " + (v.valid ? "ok" : "bad");
+
+    if (viewerEl) viewerEl.classList.remove("hidden");
+    document.getElementById("btn-download-manifest").classList.remove("hidden");
+    if (statusEl) statusEl.innerText = "";
+  } catch (err) {
+    if (statusEl) statusEl.innerText = "Manifest error: " + (err.message || err);
+  }
+}
+
+function downloadManifest() {
+  const m = window.__lastManifest;
+  if (!m) return;
+  const blob = new Blob([JSON.stringify(m, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = m.manifest_id + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function setEngineStatus(state, label) {
@@ -765,6 +827,11 @@ async function runEngineWithPayload(payload) {
     if (placeholderEl) placeholderEl.classList.add("hidden");
     if (resultsEl) resultsEl.classList.remove("hidden");
     setEngineStatus("ok", "Live");
+
+    // Remember the payload so the manifest can be generated for it.
+    window.__lastPayload = payload;
+    const mb = document.getElementById("btn-gen-manifest");
+    if (mb) mb.disabled = false;
   } catch (err) {
     showEngineError(err.message || String(err));
   }

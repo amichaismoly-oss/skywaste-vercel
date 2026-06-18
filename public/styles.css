@@ -1464,6 +1464,92 @@ body {
   font-size: 0.86rem;
 }
 
+/* Compliance manifest */
+.manifest-block {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-color);
+}
+.manifest-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-color-hover);
+  color: var(--text-secondary);
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--color-cyan);
+}
+.manifest-status {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.manifest-viewer {
+  margin-top: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(7, 11, 25, 0.85);
+}
+.manifest-viewer-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+}
+.manifest-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-cyan);
+}
+.manifest-verify {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.manifest-verify.ok { color: var(--color-green); background: var(--color-green-glow); }
+.manifest-verify.bad { color: var(--color-red); background: var(--color-red-glow); }
+.manifest-hash {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-family: var(--font-body);
+}
+.manifest-code {
+  margin: 0;
+  padding: 16px;
+  max-height: 360px;
+  overflow: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: #c8d3e8;
+  white-space: pre;
+}
+.manifest-disclaimer {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  background: rgba(245, 158, 11, 0.05);
+  border-top: 1px solid var(--border-color);
+}
+.manifest-disclaimer code {
+  color: var(--color-amber);
+  font-size: 0.72rem;
+}
+
 /* Engine card responsiveness */
 @media (max-width: 1180px) {
   .engine-stat-grid { grid-template-columns: repeat(2, 1fr); }
