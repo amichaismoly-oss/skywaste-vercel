@@ -1618,7 +1618,48 @@ body {
 
 /* Sidebar nav anchor targets */
 html { scroll-behavior: smooth; }
-#dashboard, #simulator, #payloads, #intake { scroll-margin-top: 24px; }
+#dashboard, #simulator, #payloads, #intake, #board { scroll-margin-top: 24px; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Live El Al flight board
+   ─────────────────────────────────────────────────────────────────────────── */
+.board-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.board-title { margin: 0; border: 0; padding: 0; }
+.board-controls { display: flex; align-items: center; gap: 12px; }
+.board-source {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+}
+.board-source.live { color: var(--color-green); border-color: var(--color-green-glow); }
+.board-source.demo { color: var(--color-amber); border-color: var(--color-amber-glow); }
+.board-controls .btn { padding: 6px 14px; font-size: 0.82rem; }
+
+.flt-status {
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+.cater-yes { color: var(--color-green); font-weight: 600; }
+.cater-wait { color: var(--text-muted); }
 
 /* ───────────────────────────────────────────────────────────────────────────
    Flight Data Intake card

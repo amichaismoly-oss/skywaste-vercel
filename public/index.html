@@ -54,6 +54,14 @@
             </a>
           </li>
           <li class="nav-item">
+            <a href="#board">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+              לוח טיסות חי
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="#intake">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -410,6 +418,37 @@
               <button class="btn btn-ghost" id="btn-download-measured-manifest">הורד מניפסט מדוד</button>
               <span class="manifest-verify ok">מקור: מדוד · משמורת: ממתינה</span>
             </div>
+          </div>
+        </section>
+
+        <!-- Live El Al flight board (auto from flight API, merges with intake) -->
+        <section class="board-card" id="board">
+          <div class="board-header">
+            <div class="widget-header board-title">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="widget-title-icon text-blue">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+              <div>
+                <h3 class="widget-title">לוח טיסות אל על חי</h3>
+                <p class="widget-subtitle">נמשך אוטומטית מ-API טיסות · מתמזג עם נתוני הקייטרינג שהוזנו</p>
+              </div>
+            </div>
+            <div class="board-controls">
+              <span class="board-source" id="board-source">—</span>
+              <button class="btn btn-ghost" id="btn-refresh-board">רענן</button>
+            </div>
+          </div>
+
+          <div class="intake-table-wrap">
+            <table class="intake-table" id="board-table">
+              <thead>
+                <tr>
+                  <th>טיסה</th><th>מסלול</th><th>זמן</th><th>סטטוס</th><th>מטוס</th><th>נתוני קייטרינג</th>
+                </tr>
+              </thead>
+              <tbody id="board-tbody"></tbody>
+            </table>
+            <div class="intake-empty" id="board-empty">טוען טיסות…</div>
           </div>
         </section>
 

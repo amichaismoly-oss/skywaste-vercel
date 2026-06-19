@@ -180,6 +180,7 @@ function init() {
   runLiveEngine();
   loadBtsRoutes();
   setupIntake();
+  setupBoard();
 }
 
 // Live Clock Update
@@ -1183,6 +1184,7 @@ async function submitFlightRecord() {
     });
     writeIntakeLog(rows);
     renderIntakeLog();
+    if (typeof loadBoard === "function") loadBoard(); // refresh the merge column
   } catch (err) {
     if (resultEl) {
       resultEl.classList.remove("hidden");
@@ -1260,6 +1262,75 @@ function clearIntakeLog() {
   renderIntakeLog();
   const el = document.getElementById("intake-result");
   if (el) el.classList.add("hidden");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Live El Al flight board — auto-pulled from the flight API, merged with intake
+// ─────────────────────────────────────────────────────────────────────────────
+
+function setupBoard() {
+  const btn = document.getElementById("btn-refresh-board");
+  if (btn) btn.addEventListener("click", () => loadBoard());
+  loadBoard();
+}
+
+function normFlightNo(s) {
+  return (s || "").toUpperCase().replace(/\s+/g, "");
+}
+
+async function loadBoard() {
+  const tbody = document.getElementById("board-tbody");
+  const empty = document.getElementById("board-empty");
+  const sourceEl = document.getElementById("board-source");
+  if (empty) {
+    empty.style.display = "block";
+    empty.innerText = "טוען טיסות…";
+  }
+  try {
+    const resp = await fetch(`${API_BASE}/api/elal/flights`);
+    const data = await resp.json();
+    const flights = data.flights || [];
+
+    // Index the catering intake log by flight number for the merge.
+    const log = readIntakeLog();
+    const byFlight = {};
+    log.forEach((r) => {
+      byFlight[normFlightNo(r.flight)] = r;
+    });
+
+    if (sourceEl) {
+      const live = data.source === "live";
+      sourceEl.innerText = live ? "● חי" : "● דמו";
+      sourceEl.className = "board-source " + (live ? "live" : "demo");
+    }
+
+    if (tbody) {
+      tbody.innerHTML = flights
+        .map((f) => {
+          const rec = byFlight[normFlightNo(f.flight_number)];
+          const catering = rec
+            ? `<span class="cater-yes">✓ ${rec.meals_per_pax} מנות/נוסע</span>`
+            : `<span class="cater-wait">⏳ ממתין</span>`;
+          const arrow = f.direction === "departure" ? "↑" : "↓";
+          return `<tr>
+            <td>${f.flight_number}</td>
+            <td>${arrow} ${f.origin}→${f.destination}</td>
+            <td>${f.scheduled || "—"}</td>
+            <td><span class="flt-status">${f.status}</span></td>
+            <td>${f.aircraft}</td>
+            <td>${catering}</td>
+          </tr>`;
+        })
+        .join("");
+    }
+    if (empty) empty.style.display = flights.length ? "none" : "block";
+    if (empty && !flights.length) empty.innerText = "אין טיסות להצגה.";
+  } catch (err) {
+    if (empty) {
+      empty.style.display = "block";
+      empty.innerText = "לוח הטיסות לא זמין — " + (err.message || err);
+    }
+  }
 }
 
 // Start the Dashboard

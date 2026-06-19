@@ -36,6 +36,7 @@ from skywaste.measurement import (
     record_to_measurement,
     KG_PER_MEAL,
 )
+from skywaste.flights import get_elal_flights
 from skywaste.db import DBClient
 from skywaste.optimization import (
     FlightInput,
@@ -173,6 +174,16 @@ async def bts_routes():
             return json.load(fh)
     except Exception:
         return {"source": "BTS T-100 Segment", "ingested": False, "route_count": 0, "routes": []}
+
+
+@app.get("/api/elal/flights", tags=["Flights"])
+async def elal_flights():
+    """
+    Live El Al (LY) flight board for TLV. Pulls from AeroDataBox when
+    AERODATABOX_API_KEY is set, else returns a labelled demo board.
+    Passenger/meal data is NOT here — it is merged from the catering intake.
+    """
+    return await get_elal_flights()
 
 
 @app.post("/api/optimize/flight", response_model=OptimizationResult, tags=["Optimization"])
