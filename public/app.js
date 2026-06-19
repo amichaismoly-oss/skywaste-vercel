@@ -179,6 +179,7 @@ function init() {
   // Fire the real backend engine for the initial flight + load BTS routes.
   runLiveEngine();
   loadBtsRoutes();
+  setupIntake();
 }
 
 // Live Clock Update
@@ -1093,6 +1094,172 @@ function renderEngineResult(d) {
   set("eng-confidence", `ביטחון: ${d.confidence_level}`);
   const srcEl = document.getElementById("eng-sources");
   if (srcEl) srcEl.innerText = (d.data_sources || []).join("  ·  ");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Flight Data Intake — catering partner reports (boarded + meals prepared [+ returned])
+//  Records accumulate in the browser (localStorage) and export to CSV.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const INTAKE_KEY = "skywaste_flight_log";
+
+// Common El Al routes from TLV → [destination, great-circle km].
+const EL_AL_ROUTES = [
+  ["JFK", 9100], ["EWR", 9100], ["LAX", 12000], ["MIA", 11000], ["BOS", 8900],
+  ["LHR", 3580], ["CDG", 3300], ["FCO", 2300], ["FRA", 2900], ["AMS", 3350],
+  ["BCN", 3150], ["MAD", 3550], ["ATH", 1450], ["VIE", 2400], ["ZRH", 2900],
+  ["BKK", 7300], ["HKG", 8200], ["NRT", 9200], ["BOM", 4100], ["JNB", 6900],
+];
+
+function setupIntake() {
+  const routeSel = document.getElementById("rec-route");
+  if (routeSel) {
+    routeSel.innerHTML = EL_AL_ROUTES
+      .map(([dest, km]) => `<option value="${dest}|${km}">TLV → ${dest}</option>`)
+      .join("");
+  }
+  const dateEl = document.getElementById("rec-date");
+  if (dateEl && !dateEl.value) dateEl.value = todayISO();
+
+  const sub = document.getElementById("btn-submit-record");
+  if (sub) sub.addEventListener("click", () => submitFlightRecord());
+  const exp = document.getElementById("btn-export-csv");
+  if (exp) exp.addEventListener("click", () => exportIntakeCsv());
+  const clr = document.getElementById("btn-clear-log");
+  if (clr) clr.addEventListener("click", () => clearIntakeLog());
+
+  renderIntakeLog();
+}
+
+function readIntakeLog() {
+  try {
+    return JSON.parse(localStorage.getItem(INTAKE_KEY) || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function writeIntakeLog(rows) {
+  localStorage.setItem(INTAKE_KEY, JSON.stringify(rows));
+}
+
+async function submitFlightRecord() {
+  const [dest, km] = (document.getElementById("rec-route").value || "JFK|9100").split("|");
+  const returnedRaw = document.getElementById("rec-returned").value;
+  const body = {
+    flight_number: document.getElementById("rec-flight").value || "LY000",
+    departure_date: document.getElementById("rec-date").value || todayISO(),
+    origin_airport: "TLV",
+    destination_airport: dest,
+    route_distance_km: Number(km),
+    passengers_boarded: parseInt(document.getElementById("rec-pax").value, 10),
+    meals_prepared: parseInt(document.getElementById("rec-prepared").value, 10),
+  };
+  if (returnedRaw !== "") body.meals_returned = parseInt(returnedRaw, 10);
+
+  const resultEl = document.getElementById("intake-result");
+  try {
+    const resp = await fetch(`${API_BASE}/api/flight-record`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    renderIntakeResult(data);
+
+    // Append to the running log.
+    const r = data.record;
+    const rows = readIntakeLog();
+    rows.unshift({
+      flight: body.flight_number,
+      date: body.departure_date,
+      dest: dest,
+      pax: r.passengers_boarded,
+      prepared: r.meals_prepared,
+      returned: r.loop_closed ? r.meals_returned : "",
+      meals_per_pax: r.meals_per_pax,
+      waste_kg: r.loop_closed ? r.returned_waste_weight_kg : "",
+    });
+    writeIntakeLog(rows);
+    renderIntakeLog();
+  } catch (err) {
+    if (resultEl) {
+      resultEl.classList.remove("hidden");
+      resultEl.innerHTML = `<div class="engine-error">שגיאת קליטה — ${err.message || err}</div>`;
+    }
+  }
+}
+
+function renderIntakeResult(data) {
+  const el = document.getElementById("intake-result");
+  if (!el) return;
+  const r = data.record;
+  el.classList.remove("hidden");
+
+  if (r.loop_closed) {
+    const fb = r.model_feedback;
+    const deltaCls = fb.delta_kg_per_pax <= 0 ? "text-green" : "text-amber";
+    el.innerHTML = `
+      <div class="engine-stat-grid">
+        <div class="engine-stat"><span class="es-label">נצרך</span><span class="es-value">${r.meals_consumed}</span><span class="es-unit">${r.consumption_rate_pct}% מהמנות</span></div>
+        <div class="engine-stat highlight"><span class="es-label">עודף הכנה (נזרק)</span><span class="es-value text-amber">${data.recommendation.over_prepared_meals}</span><span class="es-unit">מנות · ${data.recommendation.over_preparation_pct}%</span></div>
+        <div class="engine-stat"><span class="es-label">פסולת ICW בפועל</span><span class="es-value">${r.returned_waste_weight_kg}</span><span class="es-unit">ק״ג</span></div>
+        <div class="engine-stat highlight"><span class="es-label">ק״ג/נוסע בפועל</span><span class="es-value ${deltaCls}">${r.actual_waste_kg_per_pax}</span><span class="es-unit">מול IATA 1.43</span></div>
+      </div>
+      <div class="measure-loop"><strong>לולאה נסגרה ✓</strong> — נקלטו 3 השדות. ה-${r.actual_waste_kg_per_pax} ק״ג/נוסע המדודים הוזנו למנוע והמניפסט נושא מקור <strong>מדוד</strong>.</div>`;
+  } else {
+    el.innerHTML = `
+      <div class="engine-stat-grid">
+        <div class="engine-stat highlight"><span class="es-label">מנות / נוסע</span><span class="es-value text-cyan">${r.meals_per_pax}</span><span class="es-unit">יחס הכנה</span></div>
+        <div class="engine-stat"><span class="es-label">משקל שהוכן</span><span class="es-value">${r.prepared_weight_kg}</span><span class="es-unit">ק״ג</span></div>
+        <div class="engine-stat"><span class="es-label">נוסעים</span><span class="es-value">${r.passengers_boarded}</span><span class="es-unit">עלו</span></div>
+        <div class="engine-stat"><span class="es-label">מנות שהוכנו</span><span class="es-value">${r.meals_prepared}</span><span class="es-unit">סה״כ</span></div>
+      </div>
+      <div class="measure-loop">נקלט צד ההיצע ✓. כדי לחשב <strong>עודף הכנה ופסולת בפועל</strong> צריך גם <strong>"מנות שחזרו"</strong> — הזן אותו כשהשותפה תביא אותו.</div>`;
+  }
+}
+
+function renderIntakeLog() {
+  const rows = readIntakeLog();
+  const tbody = document.getElementById("intake-tbody");
+  const empty = document.getElementById("intake-empty");
+  const count = document.getElementById("intake-count");
+  if (count) count.innerText = rows.length;
+  if (!tbody) return;
+  tbody.innerHTML = rows
+    .map(
+      (r) =>
+        `<tr><td>${r.flight}</td><td>${r.date}</td><td>${r.dest}</td><td>${r.pax}</td><td>${r.prepared}</td><td>${r.returned || "—"}</td><td>${r.meals_per_pax}</td><td>${r.waste_kg || "—"}</td></tr>`
+    )
+    .join("");
+  if (empty) empty.style.display = rows.length ? "none" : "block";
+}
+
+function exportIntakeCsv() {
+  const rows = readIntakeLog();
+  if (!rows.length) return;
+  const header = ["flight", "date", "destination", "passengers", "meals_prepared", "meals_returned", "meals_per_pax", "waste_kg"];
+  const lines = [header.join(",")].concat(
+    rows.map((r) => [r.flight, r.date, r.dest, r.pax, r.prepared, r.returned, r.meals_per_pax, r.waste_kg].join(","))
+  );
+  const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "elal_flight_log.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function clearIntakeLog() {
+  if (!confirm("לנקות את כל היומן? פעולה זו בלתי הפיכה.")) return;
+  localStorage.removeItem(INTAKE_KEY);
+  renderIntakeLog();
+  const el = document.getElementById("intake-result");
+  if (el) el.classList.add("hidden");
 }
 
 // Start the Dashboard

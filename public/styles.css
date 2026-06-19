@@ -1618,7 +1618,90 @@ body {
 
 /* Sidebar nav anchor targets */
 html { scroll-behavior: smooth; }
-#dashboard, #simulator, #payloads { scroll-margin-top: 24px; }
+#dashboard, #simulator, #payloads, #intake { scroll-margin-top: 24px; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Flight Data Intake card
+   ─────────────────────────────────────────────────────────────────────────── */
+.intake-card {
+  background: linear-gradient(180deg, rgba(0, 136, 255, 0.05), var(--bg-card));
+  border: 1px solid rgba(0, 136, 255, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.intake-title { margin: 0 0 20px; border: 0; padding: 0; }
+.intake-form {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+.optional-tag {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 1px 6px;
+  margin-inline-start: 4px;
+}
+.intake-result { margin-top: 20px; }
+
+.intake-log-section { margin-top: 24px; }
+.intake-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.intake-log-header .section-divider-title { margin: 0; }
+.intake-log-actions { display: flex; gap: 8px; }
+.intake-log-actions .btn { padding: 6px 12px; font-size: 0.8rem; }
+
+.intake-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+.intake-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.intake-table th,
+.intake-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+.intake-table th {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.74rem;
+  position: sticky;
+  top: 0;
+}
+.intake-table tbody tr:last-child td { border-bottom: 0; }
+.intake-table tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+.intake-empty {
+  padding: 22px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 1180px) {
+  .intake-form { grid-template-columns: 1fr 1fr; }
+  .intake-form .measure-submit { grid-column: 1 / -1; }
+}
+@media (max-width: 580px) {
+  .intake-card { padding: 18px; }
+  .intake-form { grid-template-columns: 1fr; }
+}
 
 /* ───────────────────────────────────────────────────────────────────────────
    RTL (Hebrew) refinements

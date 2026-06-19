@@ -30,7 +30,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from skywaste.compliance import build_manifest, verify_manifest
-from skywaste.measurement import process_measurement
+from skywaste.measurement import (
+    process_measurement,
+    process_flight_record,
+    record_to_measurement,
+    KG_PER_MEAL,
+)
 from skywaste.db import DBClient
 from skywaste.optimization import (
     FlightInput,
@@ -107,6 +112,19 @@ class MeasurementRequest(BaseModel):
     operator_id: Optional[str] = None
     device_id: Optional[str] = None
     previous_manifest_hash: Optional[str] = None
+
+
+class FlightRecordRequest(BaseModel):
+    """Meal-count intake from the catering partner (per flight)."""
+    flight_number: str = Field(..., examples=["LY001"])
+    departure_date: date = Field(..., examples=["2026-06-19"])
+    origin_airport: str = Field("TLV", min_length=3, max_length=3)
+    destination_airport: str = Field(..., min_length=3, max_length=3, examples=["JFK"])
+    aircraft_type: str = "B789"
+    route_distance_km: float = Field(..., gt=0, examples=[9100])
+    passengers_boarded: int = Field(..., gt=0, examples=[280])
+    meals_prepared: int = Field(..., ge=0, examples=[330])
+    meals_returned: Optional[int] = Field(default=None, examples=[70])
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
@@ -245,6 +263,66 @@ async def measurement_flight(req: MeasurementRequest):
         return {
             "measurement": measurement,
             "optimization": result,
+            "manifest": manifest,
+        }
+    except Exception as e:  # pragma: no cover
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/flight-record", tags=["Measurement"])
+async def flight_record(req: FlightRecordRequest):
+    """
+    Meal-count intake from the catering partner.
+
+    Accepts passengers boarded + meals prepared (+ optionally meals returned),
+    bridges meal counts to kg, runs the optimizer, and reports the
+    over-preparation gap. When meals_returned is supplied it also closes the loop
+    (actual waste/pax + measured manifest).
+    """
+    try:
+        rec = process_flight_record(
+            passengers_boarded=req.passengers_boarded,
+            meals_prepared=req.meals_prepared,
+            meals_returned=req.meals_returned,
+        )
+
+        flight_input = FlightInput(
+            flight_number=req.flight_number,
+            origin_airport=req.origin_airport,
+            destination_airport=req.destination_airport,
+            departure_date=req.departure_date,
+            aircraft_type=req.aircraft_type,
+            passenger_count=req.passengers_boarded,
+            route_distance_km=req.route_distance_km,
+            historical_waste_kg_per_pax=rec.get("actual_waste_kg_per_pax"),
+        )
+        result = await _engine.optimize_flight(flight_input)
+
+        if rec["loop_closed"]:
+            # Over-preparation = meals that came back uneaten (the real waste signal).
+            over = rec["meals_returned"]
+            recommendation = {
+                "needs_returns": False,
+                "over_prepared_meals": over,
+                "over_preparation_pct": round(over / rec["meals_prepared"] * 100, 1) if rec["meals_prepared"] else 0.0,
+                "waste_disposal_kg": rec["returned_waste_weight_kg"],
+            }
+        else:
+            # Supply side only — true waste is unknowable until returns are reported.
+            recommendation = {
+                "needs_returns": True,
+                "meals_per_pax": rec["meals_per_pax"],
+                "note": "Actual over-preparation and waste require the 'meals returned' figure.",
+            }
+
+        manifest = build_manifest(
+            flight_input, result, measurement=record_to_measurement(rec)
+        )
+
+        return {
+            "record": rec,
+            "optimization": result,
+            "recommendation": recommendation,
             "manifest": manifest,
         }
     except Exception as e:  # pragma: no cover
