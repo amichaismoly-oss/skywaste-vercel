@@ -15,12 +15,12 @@ const flightsData = [
     defaultDuration: 11,
     connectionRisk: {
       severity: "critical",
-      message: "15 connecting passengers from Mumbai (AI131) delayed by 95 mins. Lookalike model updated: system recommends removing 12 Economy hot-meal trays from loading payload if delay persists past gate-lock."
+      message: "15 נוסעי המשך ממומבאי (AI131) מתעכבים ב-95 דקות. מודל ה-Lookalike עודכן: המערכת ממליצה להוריד 12 מגשי ארוחה חמה בתיירים מהמטען אם העיכוב יימשך מעבר לנעילת השער."
     },
     timeline: {
-      t48: "Baseline Forecast: 280 meals standard catering plan initialized.",
-      t24: "Lookalike AI model predicted 92 meals for non-preorder passengers.",
-      t5: "Connection Alert: AI131 delay flagged. Adjustment window open to trim 12 economy meals."
+      t48: "תחזית בסיס: אותחלה תוכנית קייטרינג רגילה ל-280 ארוחות.",
+      t24: "מודל Lookalike של AI חזה 92 ארוחות לנוסעים ללא הזמנה מוקדמת.",
+      t5: "התראת חיבור: עיכוב AI131 סומן. חלון התאמה פתוח לקיצוץ 12 ארוחות תיירים."
     }
   },
   {
@@ -36,12 +36,12 @@ const flightsData = [
     defaultDuration: 7.5,
     connectionRisk: {
       severity: "warning",
-      message: "8 connecting passengers from Delhi (EK511) delayed. Baggage and transit times monitored. Payload optimization standby."
+      message: "8 נוסעי המשך מדלהי (EK511) מתעכבים. זמני כבודה ומעבר במעקב. אופטימיזציית מטען בהמתנה."
     },
     timeline: {
-      t48: "Baseline Forecast: 420 meals standard payload sent to DXB catering hub.",
-      t24: "Lookalike model forecast 195 meals with high passenger match profile.",
-      t5: "Gate Scan: 8 transit passengers delayed. Manifest optimization queued."
+      t48: "תחזית בסיס: מטען רגיל של 420 ארוחות נשלח למרכז הקייטרינג ב-DXB.",
+      t24: "מודל Lookalike חזה 195 ארוחות עם פרופיל התאמת נוסעים גבוה.",
+      t5: "סריקת שער: 8 נוסעי מעבר מתעכבים. אופטימיזציית מניפסט בתור."
     }
   },
   {
@@ -57,9 +57,9 @@ const flightsData = [
     defaultDuration: 13.5,
     connectionRisk: null,
     timeline: {
-      t48: "Baseline: 320 meals initial payload sent to Changi Catering.",
-      t24: "Lookalike Model: 256 confirmed pre-orders. Lookalike model assigned 58 meals.",
-      t5: "Logistics Sync: No connection delay risks detected. Final payload confirmed."
+      t48: "בסיס: מטען ראשוני של 320 ארוחות נשלח לקייטרינג צ'אנגי.",
+      t24: "מודל Lookalike: 256 הזמנות מוקדמות מאושרות. המודל הקצה 58 ארוחות.",
+      t5: "סנכרון לוגיסטי: לא זוהו סיכוני עיכוב בחיבורים. מטען סופי אושר."
     }
   },
   {
@@ -75,12 +75,12 @@ const flightsData = [
     defaultDuration: 9,
     connectionRisk: {
       severity: "notice",
-      message: "18 passengers from Munich (LH2011) delayed due to ATC hold in Frankfurt. Flight crew advised to store 18 dry snacks in galley backup."
+      message: "18 נוסעים ממינכן (LH2011) מתעכבים עקב עיכוב ATC בפרנקפורט. הצוות מתבקש לאחסן 18 חטיפים יבשים כגיבוי בגלריה."
     },
     timeline: {
-      t48: "Baseline Forecast: 260 meals sent to LSG Sky Chefs FRA.",
-      t24: "Lookalike Model: Predicted 104 meals for un-selected seats.",
-      t5: "ATC Alert: LH2011 delay confirmed. System recommends holding 18 backup meals in main galleys."
+      t48: "תחזית בסיס: 260 ארוחות נשלחו ל-LSG Sky Chefs ב-FRA.",
+      t24: "מודל Lookalike: חזה 104 ארוחות למושבים שלא נבחרו.",
+      t5: "התראת ATC: עיכוב LH2011 אושר. המערכת ממליצה לשמור 18 ארוחות גיבוי בגלריות הראשיות."
     }
   }
 ];
@@ -260,8 +260,8 @@ function setFlightState(flight) {
   sliderPreorderRate.value = flight.defaultPreorderRate;
   
   // Sync value text displays
-  valIcwFee.innerHTML = `$${flight.defaultIcwFee} <span class="unit">/ Ton</span>`;
-  valDuration.innerHTML = `${flight.defaultDuration} <span class="unit">Hours</span>`;
+  valIcwFee.innerHTML = `$${flight.defaultIcwFee} <span class="unit">/ טון</span>`;
+  valDuration.innerHTML = `${flight.defaultDuration} <span class="unit">שעות</span>`;
   valPreorderRate.innerText = `${flight.defaultPreorderRate}%`;
 }
 
@@ -303,14 +303,14 @@ function setupEventListeners() {
   // Sliders Input Listeners (real-time calculations)
   sliderIcwFee.addEventListener("input", (e) => {
     currentState.icwFee = parseInt(e.target.value);
-    valIcwFee.innerHTML = `$${currentState.icwFee} <span class="unit">/ Ton</span>`;
+    valIcwFee.innerHTML = `$${currentState.icwFee} <span class="unit">/ טון</span>`;
     calculateAndRender();
     if (currentState.showJson) generateCateringJson();
   });
 
   sliderDuration.addEventListener("input", (e) => {
     currentState.duration = parseFloat(e.target.value);
-    valDuration.innerHTML = `${currentState.duration} <span class="unit">Hours</span>`;
+    valDuration.innerHTML = `${currentState.duration} <span class="unit">שעות</span>`;
     calculateAndRender();
     if (currentState.showJson) generateCateringJson();
   });
@@ -332,7 +332,7 @@ function setupEventListeners() {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="btn-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
         </svg>
-        Hide JSON Payload Block
+        הסתר בלוק מטען JSON
       `;
       // Scroll to viewer block
       jsonViewerContainer.scrollIntoView({ behavior: "smooth" });
@@ -342,7 +342,7 @@ function setupEventListeners() {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="btn-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
         </svg>
-        Generate & View JSON Payload
+        הפק וצפה במטען JSON
       `;
     }
   });
@@ -352,10 +352,10 @@ function setupEventListeners() {
     const code = jsonCodeBlock.innerText;
     navigator.clipboard.writeText(code).then(() => {
       btnCopyJson.classList.add("copied");
-      btnCopyJson.querySelector("span").innerText = "Copied!";
+      btnCopyJson.querySelector("span").innerText = "הועתק!";
       setTimeout(() => {
         btnCopyJson.classList.remove("copied");
-        btnCopyJson.querySelector("span").innerText = "Copy";
+        btnCopyJson.querySelector("span").innerText = "העתק";
       }, 2000);
     });
   });
@@ -393,7 +393,7 @@ function calculateAndRender() {
   
   metricBufferRatio.innerText = `${recommendedBufferRatio.toFixed(1)}%`;
   const bufferCount = Math.round(P * (recommendedBufferRatio / 100));
-  metricBufferCount.innerText = `${bufferCount} meals`;
+  metricBufferCount.innerText = `${bufferCount} ארוחות`;
   
   // Calculate relative progress bar width for buffer (clamped 0-100% representation for display visual)
   const bufferProgressBarPct = (recommendedBufferRatio / 5) * 100;
@@ -415,8 +415,8 @@ function calculateAndRender() {
   const fuelPenaltyValue = duration * leftoverTons * 120;
 
   // Render Simulator outputs
-  calcLeftoverMeals.innerText = `${leftoverCount} meals`;
-  calcLeftoverTons.innerText = `${leftoverTons.toFixed(3)} Tons`;
+  calcLeftoverMeals.innerText = `${leftoverCount} ארוחות`;
+  calcLeftoverTons.innerText = `${leftoverTons.toFixed(3)} טון`;
   
   calcWasteCost.innerText = `$${Math.round(totalWasteCostValue).toLocaleString()}`;
   calcFuelPenalty.innerText = `$${Math.round(fuelPenaltyValue).toLocaleString()}`;
@@ -481,10 +481,10 @@ function renderAlertBanner(flight) {
           </svg>
         </div>
         <div class="alert-content">
-          <div class="alert-title" style="color: var(--color-green);">Connection Feeds Operational</div>
-          <div class="alert-desc">All connecting routes on schedule. AI Lookalike payload synchronized with flight boarding manifest.</div>
+          <div class="alert-title" style="color: var(--color-green);">פידי החיבורים תקינים</div>
+          <div class="alert-desc">כל מסלולי ההמשך בלו״ז. מטען ה-AI Lookalike מסונכרן עם מניפסט העלייה למטוס.</div>
         </div>
-        <span class="alert-action-badge" style="background-color: var(--color-green); color: white; box-shadow: none;">Stable</span>
+        <span class="alert-action-badge" style="background-color: var(--color-green); color: white; box-shadow: none;">יציב</span>
       </div>
     `;
     return;
@@ -513,10 +513,10 @@ function renderAlertBanner(flight) {
         </svg>
       </div>
       <div class="alert-content">
-        <div class="alert-title">${risk.severity.toUpperCase()}: Connection Transit Conflict Flagged</div>
+        <div class="alert-title">${risk.severity.toUpperCase()}: זוהה קונפליקט בחיבור/מעבר</div>
         <div class="alert-desc">${risk.message}</div>
       </div>
-      <span class="alert-action-badge" id="action-required-badge">Sync Payload</span>
+      <span class="alert-action-badge" id="action-required-badge">סנכרן מטען</span>
     </div>
   `;
 
@@ -524,7 +524,7 @@ function renderAlertBanner(flight) {
   const badge = document.getElementById("action-required-badge");
   if (badge) {
     badge.addEventListener("click", () => {
-      alert("Catering Adjustment Command dispatched to Catering Dispatch. Economy meal loading manifest trimmed by 12 passenger-payloads.");
+      alert("פקודת התאמת קייטרינג נשלחה לשיגור. מניפסט העמסת ארוחות תיירים קוצץ ב-12 מטעני-נוסע.");
       // Trigger a slight pre-order rate change to show immediate integration
       sliderPreorderRate.value = Math.max(0, parseInt(sliderPreorderRate.value) - 4);
       currentState.preorderRate = parseInt(sliderPreorderRate.value);
@@ -543,20 +543,20 @@ function updateRecommendation(bufferRatio, icwFee, duration, bufferCount, stdBuf
   if (bufferRatio < 1.8) {
     // High cost / weight risk buffer compression
     recommendationCard.classList.add("alert-state");
-    recommendationBadge.innerText = "AGGRESSIVE TRIM";
+    recommendationBadge.innerText = "קיצוץ אגרסיבי";
     recommendationImpact.innerText = `Buffer: ${bufferRatio.toFixed(1)}%`;
-    recommendationText.innerHTML = `High destination ICW disposal fees (<strong>$${icwFee}/Ton</strong>) and long-haul fuel penalty (<strong>${duration} hrs</strong>) require stringent buffer reduction. Dynamic buffer compressed to <strong>${bufferCount} meals</strong> (saving <strong>${stdBufferCount - bufferCount} meals</strong> of redundant weight).`;
+    recommendationText.innerHTML = `דמי פינוי ICW גבוהים ביעד (<strong>$${icwFee}/טון</strong>) וקנס דלק לטווח ארוך (<strong>${duration} שעות</strong>) מחייבים הפחתת buffer אגרסיבית. ה-buffer הדינמי כווץ ל-<strong>${bufferCount} ארוחות</strong> (חיסכון של <strong>${stdBufferCount - bufferCount} ארוחות</strong> של משקל מיותר).`;
   } else if (bufferRatio <= 3.2) {
     // Balanced buffer optimization
     recommendationCard.classList.add("caution-state");
-    recommendationBadge.innerText = "OPTIMIZED YIELD";
+    recommendationBadge.innerText = "תשואה מאופטמת";
     recommendationImpact.innerText = `Buffer: ${bufferRatio.toFixed(1)}%`;
-    recommendationText.innerHTML = `Moderate route profile. Carrying safety buffer of <strong>${bufferRatio.toFixed(1)}%</strong> (<strong>${bufferCount} meals</strong>) is economically balanced against potential destination waste disposal rates and lookalike prediction limits.`;
+    recommendationText.innerHTML = `פרופיל מסלול בינוני. נשיאת buffer בטיחות של <strong>${bufferRatio.toFixed(1)}%</strong> (<strong>${bufferCount} ארוחות</strong>) מאוזנת כלכלית מול עלויות פינוי אפשריות ביעד ומגבלות תחזית ה-Lookalike.`;
   } else {
     // Standard buffer allowed (low fees, short duration)
-    recommendationBadge.innerText = "STANDARD ASSURANCE";
+    recommendationBadge.innerText = "ביטחון סטנדרטי";
     recommendationImpact.innerText = `Buffer: ${bufferRatio.toFixed(1)}%`;
-    recommendationText.innerHTML = `Low waste disposal fee (<strong>$${icwFee}/Ton</strong>) and short flight hours (<strong>${duration} hrs</strong>). Recommending standard safety buffer of <strong>${bufferCount} meals</strong> to maximize customer dining choice and satisfaction.`;
+    recommendationText.innerHTML = `דמי פינוי נמוכים (<strong>$${icwFee}/טון</strong>) וטיסה קצרה (<strong>${duration} שעות</strong>). מומלץ buffer בטיחות סטנדרטי של <strong>${bufferCount} ארוחות</strong> כדי למקסם בחירת מנות ושביעות רצון נוסעים.`;
   }
 }
 
@@ -564,10 +564,10 @@ function updateRecommendation(bufferRatio, icwFee, duration, bufferCount, stdBuf
 function updateLogisticsTimeline(flight, confirmed, predicted, buffer) {
   // Populate specific timestamps and text details
   timelineT48Meta.innerText = `${flight.timeline.t48}`;
-  timelineT24Meta.innerText = `${flight.timeline.t24} (Confirmed Pre-orders: ${confirmed} meals)`;
-  
+  timelineT24Meta.innerText = `${flight.timeline.t24} (הזמנות מוקדמות מאושרות: ${confirmed} ארוחות)`;
+
   const totalPayloadCount = confirmed + predicted + buffer;
-  timelineT5Meta.innerHTML = `Catering Loading Manifest: <strong>${totalPayloadCount} meals</strong> planned (Pre-order: ${confirmed} | AI predicted: ${predicted} | Buffer: ${buffer}).`;
+  timelineT5Meta.innerHTML = `מניפסט העמסת קייטרינג: <strong>${totalPayloadCount} ארוחות</strong> מתוכננות (הזמנה מוקדמת: ${confirmed} | חזוי AI: ${predicted} | Buffer: ${buffer}).`;
 
   // Update visual checks/marker states based on current local flight schedules
   // e.g. for long flight durations, step 3 is highly active
@@ -807,7 +807,7 @@ async function submitMeasurement() {
     if (resultsEl) resultsEl.classList.remove("hidden");
   } catch (err) {
     const loop = document.getElementById("meas-loop");
-    if (loop) loop.innerText = "Measurement error: " + (err.message || err);
+    if (loop) loop.innerText = "שגיאת מדידה: " + (err.message || err);
   }
 }
 
@@ -818,26 +818,31 @@ function renderMeasurement(data) {
     const el = document.getElementById(id);
     if (el) el.innerText = v;
   };
-  set("meas-consumed", `${m.consumed_weight_kg} kg`);
-  set("meas-rate", `${m.consumption_rate_pct}% eaten`);
-  set("meas-perpax", `${m.actual_waste_kg_per_pax} kg`);
+  set("meas-consumed", `${m.consumed_weight_kg} ק״ג`);
+  set("meas-rate", `${m.consumption_rate_pct}% נאכל`);
+  set("meas-perpax", `${m.actual_waste_kg_per_pax} ק״ג`);
 
   const deltaEl = document.getElementById("meas-delta");
   const sign = fb.delta_kg_per_pax > 0 ? "+" : "";
-  deltaEl.innerText = `${sign}${fb.delta_kg_per_pax} kg`;
+  deltaEl.innerText = `${sign}${fb.delta_kg_per_pax} ק״ג`;
   // Below prediction = less waste than assumed = good.
   deltaEl.className = "es-value " + (fb.delta_kg_per_pax <= 0 ? "text-green" : "text-amber");
-  set("meas-dir", fb.direction.replace(/_/g, " "));
+  const dirMap = {
+    below_prediction: "מתחת לתחזית",
+    above_prediction: "מעל לתחזית",
+    on_prediction: "בדיוק בתחזית",
+  };
+  set("meas-dir", dirMap[fb.direction] || fb.direction);
 
   set("meas-disposal", `${m.returned_waste_weight_kg}`);
 
   const loop = document.getElementById("meas-loop");
   if (loop) {
     loop.innerHTML =
-      `<strong>Loop closed:</strong> this measured <strong>${m.actual_waste_kg_per_pax} kg/pax</strong> ` +
-      `replaced the IATA 1.43 assumption — the engine re-optimized to ` +
-      `<strong>${data.optimization.waste_per_pax_kg} kg/pax</strong>, the manifest now carries ` +
-      `<strong>measured</strong> provenance, and the actual-vs-predicted delta is the model's training label.`;
+      `<strong>הלולאה נסגרה:</strong> ה-<strong>${m.actual_waste_kg_per_pax} ק״ג/נוסע</strong> המדודים ` +
+      `החליפו את הנחת IATA 1.43 — המנוע חישב מחדש ל-` +
+      `<strong>${data.optimization.waste_per_pax_kg} ק״ג/נוסע</strong>, המניפסט נושא כעת מקור ` +
+      `<strong>מדוד</strong>, וה-delta בין בפועל לחזוי הוא תווית האימון של המודל.`;
   }
 }
 
@@ -861,7 +866,7 @@ async function generateManifest() {
   if (!payload) return;
   const statusEl = document.getElementById("manifest-status");
   const viewerEl = document.getElementById("manifest-viewer");
-  if (statusEl) statusEl.innerText = "Generating…";
+  if (statusEl) statusEl.innerText = "מפיק…";
 
   try {
     const resp = await fetch(`${API_BASE}/api/manifest/flight`, {
@@ -875,7 +880,7 @@ async function generateManifest() {
 
     document.getElementById("manifest-json").innerText = JSON.stringify(manifest, null, 2);
     document.getElementById("manifest-regime").innerText =
-      "ABP Cat " + manifest.waste_classification.abp_category + " · " + manifest.regulatory_regime;
+      "ABP קטגוריה " + manifest.waste_classification.abp_category + " · " + manifest.regulatory_regime;
     document.getElementById("manifest-hash").innerText =
       manifest.audit.tamper_evident_hash.slice(0, 23) + "…";
 
@@ -886,14 +891,14 @@ async function generateManifest() {
       body: JSON.stringify({ manifest }),
     }).then((r) => r.json());
     const vEl = document.getElementById("manifest-verify");
-    vEl.innerText = v.valid ? "✓ hash verified" : "✗ hash mismatch";
+    vEl.innerText = v.valid ? "✓ hash מאומת" : "✗ אי-התאמת hash";
     vEl.className = "manifest-verify " + (v.valid ? "ok" : "bad");
 
     if (viewerEl) viewerEl.classList.remove("hidden");
     document.getElementById("btn-download-manifest").classList.remove("hidden");
     if (statusEl) statusEl.innerText = "";
   } catch (err) {
-    if (statusEl) statusEl.innerText = "Manifest error: " + (err.message || err);
+    if (statusEl) statusEl.innerText = "שגיאת מניפסט: " + (err.message || err);
   }
 }
 
@@ -928,7 +933,7 @@ async function runLiveEngine() {
   const flight = currentState.activeFlight;
   const params = ENGINE_PARAMS[flight.id];
   if (!params) {
-    showEngineError(`No engine parameters mapped for flight ${flight.id}.`);
+    showEngineError(`לא הוגדרו פרמטרי מנוע לטיסה ${flight.id}.`);
     return;
   }
   // Reset the BTS selector — we're back on a demo flight.
@@ -952,7 +957,7 @@ async function runEngineWithPayload(payload) {
   const placeholderEl = document.getElementById("engine-placeholder");
   const errorEl = document.getElementById("engine-error");
 
-  setEngineStatus("loading", "Computing…");
+  setEngineStatus("loading", "מחשב…");
   if (errorEl) errorEl.classList.add("hidden");
 
   try {
@@ -969,7 +974,7 @@ async function runEngineWithPayload(payload) {
     renderEngineResult(data);
     if (placeholderEl) placeholderEl.classList.add("hidden");
     if (resultsEl) resultsEl.classList.remove("hidden");
-    setEngineStatus("ok", "Live");
+    setEngineStatus("ok", "חי");
 
     // Remember the payload so the manifest can be generated for it.
     window.__lastPayload = payload;
@@ -995,24 +1000,24 @@ async function loadBtsRoutes() {
     window.__btsRoutes = routes;
 
     if (!data.ingested || routes.length === 0) {
-      sel.innerHTML = "<option value=''>— No BTS data ingested —</option>";
+      sel.innerHTML = "<option value=''>— אין נתוני BTS שהוטמעו —</option>";
       sel.disabled = true;
-      if (hint) hint.innerText = "Run scripts/ingest_bts_t100.py with a TranStats CSV to enable.";
+      if (hint) hint.innerText = "הרץ scripts/ingest_bts_t100.py עם CSV מ-TranStats כדי להפעיל.";
       return;
     }
 
     sel.disabled = false;
     sel.innerHTML =
-      "<option value=''>— Select a real BTS route —</option>" +
+      "<option value=''>— בחר מסלול BTS אמיתי —</option>" +
       routes
         .map(
           (r, i) =>
-            `<option value="${i}">${r.origin}→${r.dest} · ${r.avg_pax} pax · ${r.aircraft}</option>`
+            `<option value="${i}">${r.origin}→${r.dest} · ${r.avg_pax} נוסעים · ${r.aircraft}</option>`
         )
         .join("");
     if (hint) {
       const yr = routes[0].year ? ` (${routes[0].year})` : "";
-      hint.innerText = `${routes.length} routes from BTS T-100${yr}`;
+      hint.innerText = `${routes.length} מסלולים מ-BTS T-100${yr}`;
     }
 
     sel.addEventListener("change", () => {
@@ -1021,7 +1026,7 @@ async function loadBtsRoutes() {
       runBtsRoute(window.__btsRoutes[Number(idx)]);
     });
   } catch (err) {
-    sel.innerHTML = "<option value=''>— BTS routes unavailable —</option>";
+    sel.innerHTML = "<option value=''>— מסלולי BTS לא זמינים —</option>";
     sel.disabled = true;
     if (hint) hint.innerText = "";
   }
@@ -1043,10 +1048,10 @@ async function runBtsRoute(route) {
 
 function showEngineError(msg) {
   const errorEl = document.getElementById("engine-error");
-  setEngineStatus("error", "Error");
+  setEngineStatus("error", "שגיאה");
   if (errorEl) {
     errorEl.classList.remove("hidden");
-    errorEl.innerText = `Engine unavailable — ${msg}`;
+    errorEl.innerText = `המנוע לא זמין — ${msg}`;
   }
 }
 
@@ -1058,8 +1063,8 @@ function renderEngineResult(d) {
 
   set("eng-current-buffer", fmtKg(d.current_buffer_kg));
   set("eng-optimized-buffer", fmtKg(d.optimized_buffer_kg));
-  set("eng-reduction", `${fmtKg(d.buffer_reduction_kg)} kg`);
-  set("eng-reduction-pct", `${d.buffer_reduction_pct}% lighter`);
+  set("eng-reduction", `${fmtKg(d.buffer_reduction_kg)} ק״ג`);
+  set("eng-reduction-pct", `${d.buffer_reduction_pct}% קל יותר`);
   set("eng-net-saving", fmtUSD(d.airline_net_saving_usd));
 
   set("eng-disposal", fmtUSD(d.savings.disposal_savings_usd));
@@ -1071,11 +1076,12 @@ function renderEngineResult(d) {
   set("eng-country", d.destination_country);
   set("eng-category", (d.icw_category || "").toUpperCase());
   set("eng-regime", d.abp_regime || "—");
-  set("eng-co2", `${fmtKg(d.co2_saved_kg)} kg`);
+  set("eng-co2", `${fmtKg(d.co2_saved_kg)} ק״ג`);
 
   const riskEl = document.getElementById("eng-risk");
   if (riskEl) {
-    riskEl.innerText = (d.regulatory_risk_level || "").toUpperCase();
+    const riskMap = { high: "גבוה", medium: "בינוני", low: "נמוך" };
+    riskEl.innerText = riskMap[d.regulatory_risk_level] || (d.regulatory_risk_level || "").toUpperCase();
     riskEl.className =
       d.regulatory_risk_level === "high"
         ? "text-red"
@@ -1084,7 +1090,7 @@ function renderEngineResult(d) {
         : "text-green";
   }
 
-  set("eng-confidence", `Confidence: ${d.confidence_level}`);
+  set("eng-confidence", `ביטחון: ${d.confidence_level}`);
   const srcEl = document.getElementById("eng-sources");
   if (srcEl) srcEl.innerText = (d.data_sources || []).join("  ·  ");
 }

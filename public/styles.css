@@ -25,8 +25,8 @@
   --text-muted: #64748b;
   
   /* Typography */
-  --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', 'Heebo', system-ui, -apple-system, sans-serif;
+  --font-body: 'Heebo', system-ui, -apple-system, sans-serif;
   
   /* Transitions */
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1619,6 +1619,45 @@ body {
 /* Sidebar nav anchor targets */
 html { scroll-behavior: smooth; }
 #dashboard, #simulator, #payloads { scroll-margin-top: 24px; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   RTL (Hebrew) refinements
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Code / JSON / clock / hashes / identifiers stay LTR */
+#current-time,
+.engine-sources,
+.manifest-hash,
+.manifest-code,
+.json-code,
+.json-file-name,
+.bts-source-tag,
+.manifest-badge {
+  direction: ltr;
+  unicode-bidi: plaintext;
+}
+.manifest-code,
+.json-code { text-align: left; }
+
+/* Numeric / currency values: let the first strong char set direction so
+   "$17.33", "1.286 kg" etc. render correctly inside the RTL layout */
+.metric-value,
+.es-value,
+.es-unit,
+.output-value,
+.slider-val,
+.tiny-val,
+.recommendation-impact {
+  unicode-bidi: plaintext;
+}
+
+/* Number inputs read left-to-right */
+.measure-field input[type="number"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* Mobile drawer note: sidebar already hides < 900px; nothing RTL-specific needed */
 
 @media (max-width: 1180px) {
   .measure-form { grid-template-columns: 1fr 1fr; }
