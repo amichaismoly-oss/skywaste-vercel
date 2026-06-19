@@ -1,25 +1,26 @@
 """
 Live El Al flight board.
 
-Pulls El Al (LY) flights for TLV from AeroDataBox (a third-party flight-data API)
-when an API key is configured, and falls back to a clearly-labelled demo set so
-the board is always visible.
+Pulls El Al (LY) flights for TLV from a third-party flight-data API when a key is
+configured, and falls back to a clearly-labelled demo set so the board is always
+visible.
 
-El Al has no public API of its own; third-party providers track its flights.
-None of them expose passenger counts or meals — that is the catering partner's
-unique data, merged in on the frontend.
+Provider priority (set ONE as a Vercel env var):
+  AVIATION_EDGE_API_KEY   -> aviation-edge.com  (the configured provider)
+  AERODATABOX_API_KEY     -> aerodatabox.p.rapidapi.com  (alternative)
 
-Config (Vercel env vars):
-  AERODATABOX_API_KEY   RapidAPI key for aerodatabox.p.rapidapi.com
-  AERODATABOX_HOST      optional host override (default RapidAPI host)
+El Al has no public API of its own; these providers track its flights. None of
+them expose passenger counts or meals — that is the catering partner's unique
+data, merged in on the frontend.
 """
 from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Optional
 
 _RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com"
+_AE_BASE = "https://aviation-edge.com/v2/public"
 
 
 def _demo_flights() -> dict:
@@ -35,74 +36,132 @@ def _demo_flights() -> dict:
     return {"source": "demo", "airport": "TLV", "count": len(flights), "flights": flights}
 
 
-def _normalize(raw: dict, direction: str) -> dict | None:
-    """Map an AeroDataBox flight object to our shape; None if not El Al."""
-    airline = (raw.get("airline") or {})
-    number = (raw.get("number") or "").replace(" ", "")
-    iata = (airline.get("iata") or "").upper()
-    if iata != "LY" and not number.upper().startswith("LY"):
+def _hhmm(ts: Optional[str]) -> str:
+    if not ts:
+        return ""
+    return ts[11:16] if len(ts) >= 16 else ts
+
+
+# ── Aviation Edge ────────────────────────────────────────────────────────────
+
+def _ae_normalize(row: dict) -> Optional[dict]:
+    """Map an aviation-edge timetable row to our shape; None if not El Al."""
+    airline = row.get("airline") or {}
+    if (airline.get("iataCode") or "").upper() != "LY":
         return None
 
+    direction = (row.get("type") or "departure").lower()
+    dep = row.get("departure") or {}
+    arr = row.get("arrival") or {}
+    flight = row.get("flight") or {}
+    aircraft = row.get("aircraft") or {}
+
+    dep_iata = (dep.get("iataCode") or "").upper()
+    arr_iata = (arr.get("iataCode") or "").upper()
+    number = (flight.get("iataNumber") or flight.get("number") or "").upper()
+    if number and not number.startswith("LY"):
+        number = "LY" + number.lstrip("LY")
+
+    sched = dep.get("scheduledTime") if direction == "departure" else arr.get("scheduledTime")
+
+    return {
+        "flight_number": number or "LY—",
+        "direction": direction,
+        "origin": dep_iata or "—",
+        "destination": arr_iata or "—",
+        "scheduled": _hhmm(sched),
+        "status": (row.get("status") or "scheduled").capitalize(),
+        "aircraft": aircraft.get("modelCode") or aircraft.get("iataCode") or "—",
+    }
+
+
+async def _fetch_aviation_edge(key: str) -> dict:
+    import httpx  # lazy import
+
+    out: List[dict] = []
+    async with httpx.AsyncClient(timeout=12.0) as client:
+        for kind in ("departure", "arrival"):
+            params = {"key": key, "iataCode": "TLV", "type": kind, "airline_iata": "LY"}
+            r = await client.get(f"{_AE_BASE}/timetable", params=params)
+            if r.status_code != 200:
+                continue
+            data = r.json()
+            if not isinstance(data, list):  # error object {"error": ...}
+                continue
+            for row in data:
+                n = _ae_normalize(row)
+                if n:
+                    out.append(n)
+
+    if not out:
+        d = _demo_flights()
+        d["note"] = "Aviation Edge returned no El Al flights for the window — showing demo"
+        return d
+    return {"source": "live", "provider": "aviation-edge", "airport": "TLV", "count": len(out), "flights": out}
+
+
+# ── AeroDataBox (alternative) ────────────────────────────────────────────────
+
+def _adb_normalize(raw: dict, direction: str) -> Optional[dict]:
+    airline = raw.get("airline") or {}
+    number = (raw.get("number") or "").replace(" ", "")
+    if (airline.get("iata") or "").upper() != "LY" and not number.upper().startswith("LY"):
+        return None
     movement = raw.get("movement") or {}
-    counterpart = (movement.get("airport") or {})
+    counterpart = movement.get("airport") or {}
     sched = movement.get("scheduledTime") or {}
-    sched_str = sched.get("local") or sched.get("utc") or ""
-    # Keep just HH:MM if a full timestamp is present.
-    hhmm = sched_str[11:16] if len(sched_str) >= 16 else sched_str
-
-    aircraft = (raw.get("aircraft") or {})
-    other_iata = (counterpart.get("iata") or counterpart.get("icao") or "—")
-
-    if direction == "departure":
-        origin, dest = "TLV", other_iata
-    else:
-        origin, dest = other_iata, "TLV"
-
+    aircraft = raw.get("aircraft") or {}
+    other = (counterpart.get("iata") or counterpart.get("icao") or "—")
+    origin, dest = ("TLV", other) if direction == "departure" else (other, "TLV")
     return {
         "flight_number": number,
         "direction": direction,
         "origin": origin,
         "destination": dest,
-        "scheduled": hhmm,
+        "scheduled": _hhmm(sched.get("local") or sched.get("utc")),
         "status": raw.get("status") or "Scheduled",
         "aircraft": aircraft.get("model") or aircraft.get("reg") or "—",
     }
 
 
-async def get_elal_flights() -> dict:
-    key = os.getenv("AERODATABOX_API_KEY")
-    if not key:
-        return _demo_flights()
+async def _fetch_aerodatabox(key: str) -> dict:
+    import httpx
 
     host = os.getenv("AERODATABOX_HOST", _RAPIDAPI_HOST)
+    now = datetime.now(timezone.utc)
+    frm = now.strftime("%Y-%m-%dT%H:%M")
+    to = (now + timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M")
+    url = f"https://{host}/flights/airports/iata/TLV/{frm}/{to}"
+    params = {"direction": "Both", "withLeg": "true", "withCancelled": "true"}
+    headers = {"x-rapidapi-key": key, "x-rapidapi-host": host}
+    async with httpx.AsyncClient(timeout=12.0) as client:
+        r = await client.get(url, params=params, headers=headers)
+        if r.status_code != 200:
+            d = _demo_flights()
+            d["note"] = f"AeroDataBox HTTP {r.status_code} — showing demo"
+            return d
+        data = r.json()
+    out: List[dict] = []
+    for f in data.get("departures") or []:
+        n = _adb_normalize(f, "departure")
+        if n:
+            out.append(n)
+    for f in data.get("arrivals") or []:
+        n = _adb_normalize(f, "arrival")
+        if n:
+            out.append(n)
+    return {"source": "live", "provider": "aerodatabox", "airport": "TLV", "count": len(out), "flights": out}
+
+
+async def get_elal_flights() -> dict:
+    ae_key = os.getenv("AVIATION_EDGE_API_KEY")
+    adb_key = os.getenv("AERODATABOX_API_KEY")
     try:
-        import httpx  # lazy import
-
-        now = datetime.now(timezone.utc)
-        frm = now.strftime("%Y-%m-%dT%H:%M")
-        to = (now + timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M")
-        url = f"https://{host}/flights/airports/iata/TLV/{frm}/{to}"
-        params = {"direction": "Both", "withLeg": "true", "withCancelled": "true"}
-        headers = {"x-rapidapi-key": key, "x-rapidapi-host": host}
-
-        async with httpx.AsyncClient(timeout=12.0) as client:
-            r = await client.get(url, params=params, headers=headers)
-            if r.status_code != 200:
-                d = _demo_flights()
-                d["note"] = f"AeroDataBox HTTP {r.status_code} — showing demo"
-                return d
-            data = r.json()
-
-        out: List[dict] = []
-        for f in data.get("departures") or []:
-            n = _normalize(f, "departure")
-            if n:
-                out.append(n)
-        for f in data.get("arrivals") or []:
-            n = _normalize(f, "arrival")
-            if n:
-                out.append(n)
-        return {"source": "live", "airport": "TLV", "count": len(out), "flights": out}
+        if ae_key:
+            return await _fetch_aviation_edge(ae_key)
+        if adb_key:
+            return await _fetch_aerodatabox(adb_key)
+        return _demo_flights()
     except Exception as e:  # pragma: no cover
         d = _demo_flights()
         d["note"] = f"flight API error ({e}) — showing demo"
